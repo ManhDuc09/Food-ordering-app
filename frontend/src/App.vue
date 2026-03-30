@@ -74,7 +74,7 @@ const categories = ref([
 </script>
 
 <style scoped>
-/* Custom italic style for the KFC vibe */
+
 h1, h2 {
   font-family: 'Arial Black', sans-serif;
 }
