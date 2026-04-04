@@ -1,5 +1,11 @@
+<script setup lang="ts">
+
+import ProductList from '@/components/ProductList.vue';
+
+</script>
+
 <template>
-  <div class="p-10 text-2xl font-bold">
-    This is Menu Page 🍗
+  <div class="min-h-screen bg-gray-50">
+    <ProductList />
   </div>
 </template>
