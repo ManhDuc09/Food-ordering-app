@@ -14,8 +14,10 @@ const formatPrice = (value) => {
 </script>
 
 <template>
-  <div class="w-full bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 flex flex-col overflow-hidden border border-gray-100 h-full">
-    
+  <router-link 
+    :to="`/product/${product.id}`" 
+    class="w-full bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 flex flex-col overflow-hidden border border-gray-100 h-full cursor-pointer group"
+  >  
     <div class="relative h-48 w-full overflow-hidden">
       <img 
         :src="product.image" 
@@ -52,5 +54,6 @@ const formatPrice = (value) => {
         </button>
       </div>
     </div>
-  </div>
+  
+  </router-link>
 </template>
