@@ -5,7 +5,7 @@
       <div class="hidden space-x-6 font-bold uppercase md:flex text-sm">
         <router-link to="/" class="hover:text-red-600">Trang Chủ</router-link>
         <router-link to="/menu" class="hover:text-red-600">Thực Đơn</router-link>
-        <a href="#" class="hover:text-red-600">Tìm nhà hàng</a>
+        <router-link to="/map" class="hover:text-red-600">Tìm Nhà Hàng</router-link>
       </div>
     </div>
 
@@ -13,7 +13,7 @@
     <div class="flex items-center space-x-4">
        <router-link to="/login" class="hover:text-red-600">
         <button class="font-bold text-sm hover:text-red-600 transition-colors">
-          Đăng Nhập
+          Đăng nhập
         </button>
         </router-link>
 

@@ -1,0 +1,21 @@
+services:
+  api-service:
+    build: ./backend
+    ports:
+      - "8080:8080"
+    networks:
+      - app-net
+
+  web-service:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app           
+      - /app/node_modules         
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+
+networks:
+  app-net:
+    driver: bridge
