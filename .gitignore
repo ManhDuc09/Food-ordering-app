@@ -1,0 +1,17 @@
+.env
+
+
+frontend/node_modules/
+frontend/dist/
+
+
+backend/target/
+backend/*.jar
+
+
+.vscode/
+.idea/
+
+
+.DS_Store
+Thumbs.db
