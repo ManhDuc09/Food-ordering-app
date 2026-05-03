@@ -9,16 +9,29 @@
       </div>
     </div>
 
-    
     <div class="flex items-center space-x-4">
-       <router-link to="/login" class="hover:text-red-600">
-        <button class="font-bold text-sm hover:text-red-600 transition-colors">
-          Đăng nhập
-        </button>
+
+      <!-- NOT logged in -->
+      <template v-if="!isLoggedIn">
+        <router-link to="/login">
+          <button class="font-bold text-sm hover:text-red-600 transition-colors">
+            Đăng nhập
+          </button>
         </router-link>
+        <router-link to="/register">
+          <button class="font-bold text-sm bg-red-600 text-white px-4 py-2 rounded-full hover:bg-red-700 transition-colors">
+            Đăng ký
+          </button>
+        </router-link>
+      </template>
 
-
-      
+      <!-- logged in -->
+      <template v-else>
+        <span class="font-bold text-sm">{{ user.email }}</span>
+        <button @click="handleLogout" class="font-bold text-sm hover:text-red-600 transition-colors">
+          Đăng xuất
+        </button>
+      </template>
 
       <div class="bg-red-600 text-white px-4 py-2 rounded-full cursor-pointer hover:bg-red-700 transition-colors">
         0
@@ -26,3 +39,29 @@
     </div>
   </nav>
 </template>
+
+<script setup>
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+const isLoggedIn = ref(false)
+const user = ref(null)
+
+onMounted(() => {
+  const token = localStorage.getItem('token')
+  const userData = localStorage.getItem('user')
+  if (token && userData) {
+    isLoggedIn.value = true
+    user.value = JSON.parse(userData)
+  }
+})
+
+const handleLogout = () => {
+  localStorage.removeItem('token')
+  localStorage.removeItem('user')
+  isLoggedIn.value = false
+  user.value = null
+  router.push('/')
+}
+</script>

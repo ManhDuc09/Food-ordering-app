@@ -17,21 +17,29 @@
           </div>
         </div>
       </div>
-
+ 
       <div class="w-full md:w-1/2 flex flex-col justify-center px-8 py-12 lg:px-24 bg-white">
         <h2 class="text-3xl font-black uppercase mb-8 italic">LOGIN</h2>
 
-        <form @submit.prevent class="space-y-6">
+        <form @submit.prevent="handleLogin" class="space-y-6">
           <div class="relative border-b border-gray-300">
             <label class="text-xs text-gray-500 uppercase font-bold">Email *</label>
-            <input type="email" class="w-full py-2 outline-none focus:border-black transition-colors" />
+            <input
+                  v-model="email"
+                  type="email"
+                  class="w-full py-2 outline-none focus:border-black transition-colors"
+                />
           </div>
 
           <div class="relative border-b border-gray-300">
             <label class="text-xs text-gray-500 uppercase font-bold">Password *</label>
             <div class="flex items-center">
-              <input type="password" class="w-full py-2 outline-none focus:border-black transition-colors" />
-              <button type="button" class="text-gray-400 hover:text-black">
+              <input
+                    v-model="password"
+                    :type="showPassword ? 'text' : 'password'"
+                    class="w-full py-2 outline-none focus:border-black transition-colors"
+                  />
+              <button type="button" @click="showPassword = !showPassword" class="text-gray-400 hover:text-black">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.644m17.928.644a1.012 1.012 0 0 1 0-.644M12 18.75a6.75 6.75 0 1 0 0-13.5 6.75 6.75 0 0 0 0 13.5ZM12 15a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z" />
                 </svg>
@@ -43,7 +51,7 @@
             <a href="#" class="text-xs font-bold underline">Forgot Your Password?</a>
           </div>
 
-          <button class="w-full bg-[#28a745] hover:bg-[#218838] text-white font-bold py-3 rounded-full shadow-lg transition-all">
+          <button class="w-full bg-[#28a745] hover:bg-[#218838] text-white font-bold py-3 rounded-full shadow-lg transition-all" type="submit">
             Login
           </button>
         </form>
@@ -74,3 +82,34 @@
     </div>
   </main>
 </template>
+
+<script setup>
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { authApi } from '../api/auth'
+const router = useRouter()
+
+const email = ref('')
+const password = ref('')
+const showPassword = ref(false)
+const loading = ref(false)
+const error = ref('')
+
+const handleLogin = async () => {
+  error.value = ''
+  loading.value = true
+
+  try {
+    const data = await authApi.login(email.value, password.value)
+    localStorage.setItem('token', data.token)
+    localStorage.setItem('user', JSON.stringify({ email: data.email, role: data.role }))
+    router.push('/')
+
+  } catch (err) {
+    error.value = err.message
+
+  } finally {
+    loading.value = false   
+  }
+}
+</script>

@@ -6,6 +6,10 @@ import Menu from '../pages/Menu.vue'
 import ProductDetails from '../pages/ProductDetails.vue'
 import Login from '../pages/Login.vue'
 import Map from '../pages/Map.vue'
+
+import Register from '../pages/Register.vue'
+
+
 const routes = [
   { path: '/', component: Home },
   { path: '/menu', component: Menu },
@@ -15,6 +19,7 @@ const routes = [
     component: ProductDetails 
   },
   {path: '/login' , component: Login},
+  { path: '/register', component: Register },
   {path: '/map', component: Map}
 ]
 

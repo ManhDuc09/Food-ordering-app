@@ -25,6 +25,7 @@ public class AuthService {
                 new UsernamePasswordAuthenticationToken(
                         request.getEmail(),
                         request.getPassword()
+                        
                 )
         );
 
@@ -40,6 +41,8 @@ public class AuthService {
         user.setFullName("New User");
         user.setEmail(request.getEmail());
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        user.setFullName(request.getFullName());
+        user.setPhoneNumber(request.getPhoneNumber());
         user.setRole("customer");
         
         userRepository.save(user);

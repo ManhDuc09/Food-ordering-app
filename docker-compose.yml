@@ -14,11 +14,14 @@ services:
       - app-net
 
   api-service:
-    build: ./backend        # 👈 must be indented 4 spaces
+    build: ./backend
     ports:
       - "8080:8080"
     depends_on:
       - db
+    volumes:
+      - ./backend/src:/app/src        # 👈 mount source code
+      - ./backend/pom.xml:/app/pom.xml
     environment:
       SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
