@@ -1,7 +1,7 @@
 package com.example.backend.service;
 
-import com.example.backend.dto.AuthRequest;
-import com.example.backend.dto.AuthResponse;
+import com.example.backend.dto.auth.AuthRequest;
+import com.example.backend.dto.auth.AuthResponse;
 import com.example.backend.jwt.JwtService;
 import com.example.backend.model.User;
 import com.example.backend.repository.UserRepository;

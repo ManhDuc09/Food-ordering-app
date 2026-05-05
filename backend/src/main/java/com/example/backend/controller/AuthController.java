@@ -1,7 +1,7 @@
 package com.example.backend.controller;
 
-import com.example.backend.dto.AuthRequest;
-import com.example.backend.dto.AuthResponse;
+import com.example.backend.dto.auth.AuthRequest;
+import com.example.backend.dto.auth.AuthResponse;
 import com.example.backend.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

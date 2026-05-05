@@ -23,8 +23,14 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
+            // 1. You MUST add this for the browser to allow the connection
+            .cors(org.springframework.security.config.Customizer.withDefaults()) 
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/auth/**").permitAll() // Your login/register
+                
+                // 2. ADD THIS LINE: Allow public access to view stores
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/branches/**").permitAll()
+                
                 .anyRequest().authenticated()
             )
             .sessionManagement(sess -> sess

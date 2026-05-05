@@ -2,30 +2,43 @@
 import { onMounted, ref } from 'vue';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { branchApi } from '@/api/branch';
 
 const map = ref(null);
 const searchQuery = ref("");
+const markers = ref([]); 
+
+const loadStores = async () => {
+  try {
+    const stores = await branchApi.getAllBranches();
+    
+    stores.forEach(store => {
+      const marker = L.marker([store.latitude, store.longitude])
+        .addTo(map.value)
+        .bindPopup(`
+          <div class="p-2">
+            <b class="text-red-600">${store.name}</b><br>
+            <span class="text-xs text-gray-600">${store.address}</span><br>
+            <button class="mt-2 bg-red-600 text-white text-xs px-2 py-1 rounded">Đặt ngay</button>
+          </div>
+        `);
+      markers.value.push(marker);
+    });
+  } catch (error) {
+    console.error(error.message);
+  }
+};
 
 onMounted(() => {
- 
-
-  map.value = L.map('mapContainer').setView([10.7626, 106.6602], 13); // HCMC coords
+  
+  map.value = L.map('mapContainer').setView([10.7626, 106.6602], 13);
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
   }).addTo(map.value);
 
-     const kfcStores = [
-  { name: "KFC Bến Cát", lat: 11.1255781, lng: 106.6034281 },
-  { name: "KFC Lê Văn Sỹ", lat: 10.7887663, lng: 106.6759051 },
-  { name: "KFC Ngô Gia Tự", lat: 10.7672778, lng: 106.674303 }
-];
 
-kfcStores.forEach(store => {
-  L.marker([store.lat, store.lng])
-   .addTo(map.value)
-   .bindPopup(`<b>${store.name}</b><br>Đang mở cửa`);
-});
+  loadStores();
 });
 
 const handleSearch = async () => {
@@ -39,7 +52,8 @@ const handleSearch = async () => {
   if (data.length > 0) {
     const { lat, lon } = data[0];
     map.value.setView([lat, lon], 16);
-    L.marker([lat, lon]).addTo(map.value);
+    
+    L.marker([lat, lon]).addTo(map.value).bindPopup("Vị trí của bạn").openPopup();
   } else {
     alert("Không tìm thấy địa chỉ này!");
   }
@@ -48,6 +62,7 @@ const handleSearch = async () => {
 
 <template>
   <div class="relative w-full h-[700px] border border-gray-200">
+    <!-- Search Overlay -->
     <div class="absolute top-4 left-4 z-[1000] flex bg-white shadow-md p-1 rounded">
       <input 
         v-model="searchQuery"
@@ -56,7 +71,7 @@ const handleSearch = async () => {
         class="p-2 w-64 outline-none text-sm"
         @keyup.enter="handleSearch"
       />
-      <button @click="handleSearch" class="bg-red-600 text-white px-4 py-2 text-sm font-bold uppercase">
+      <button @click="handleSearch" class="bg-red-600 text-white px-4 py-2 text-sm font-bold uppercase hover:bg-red-700 transition">
         Tìm
       </button>
     </div>
@@ -66,8 +81,11 @@ const handleSearch = async () => {
 </template>
 
 <style scoped>
-
 #mapContainer {
   z-index: 1;
+}
+
+:deep(.leaflet-popup-content-wrapper) {
+  border-radius: 4px;
 }
 </style>
