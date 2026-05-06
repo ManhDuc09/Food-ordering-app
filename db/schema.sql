@@ -86,6 +86,15 @@ CREATE TABLE IF NOT EXISTS payments (
     paid_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-ALTER TABLE branches 
-ADD COLUMN latitude DOUBLE PRECISION,
-ADD COLUMN longitude DOUBLE PRECISION;
+ALTER TABLE products DROP COLUMN category_id;
+
+
+CREATE TABLE IF NOT EXISTS product_categories (
+    product_id UUID REFERENCES products(product_id) ON DELETE CASCADE,
+    category_id INT REFERENCES categories(id) ON DELETE CASCADE,
+    PRIMARY KEY (product_id, category_id)
+);
+
+ALTER TABLE categories
+ALTER COLUMN id TYPE UUID
+USING gen_random_uuid();

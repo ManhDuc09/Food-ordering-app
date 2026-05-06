@@ -1,14 +1,21 @@
 <script setup>
+import { ref, onMounted } from 'vue'
 import Hero from '../components/Hero.vue'
 import CategoryGrid from '../components/CategoryGrid.vue'
+import { fetchCategories } from '../api/categories' 
+const categories = ref([])
+const isLoading = ref(true)
 
-const categories = [
-  { name: 'Ưu Đãi', image: 'https://via.placeholder.com/300' },
-  { name: 'Món Mới', image: 'https://via.placeholder.com/300' },
-]
+onMounted(async () => {
+  categories.value = await fetchCategories()
+  isLoading.value = false
+})
 </script>
 
 <template>
   <Hero />
-  <CategoryGrid :categories="categories" />
+
+  <div v-if="isLoading" class="text-center p-10">Loading yummy food...</div>
+  
+  <CategoryGrid v-else :categories="categories" />
 </template>
