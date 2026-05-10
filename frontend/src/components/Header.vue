@@ -10,9 +10,7 @@
     </div>
 
     <div class="flex items-center space-x-4">
-
-      <!-- NOT logged in -->
-      <template v-if="!isLoggedIn">
+      <template v-if="!authState.isLoggedIn">
         <router-link to="/login">
           <button class="font-bold text-sm hover:text-red-600 transition-colors">
             Đăng nhập
@@ -25,9 +23,8 @@
         </router-link>
       </template>
 
-      <!-- logged in -->
       <template v-else>
-        <span class="font-bold text-sm">{{ user.email }}</span>
+        <span class="font-bold text-sm">{{ authState.user?.email }}</span>
         <button @click="handleLogout" class="font-bold text-sm hover:text-red-600 transition-colors">
           Đăng xuất
         </button>
@@ -41,27 +38,15 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { authState, syncAuth } from '../store/auth' 
 
 const router = useRouter()
-const isLoggedIn = ref(false)
-const user = ref(null)
-
-onMounted(() => {
-  const token = localStorage.getItem('token')
-  const userData = localStorage.getItem('user')
-  if (token && userData) {
-    isLoggedIn.value = true
-    user.value = JSON.parse(userData)
-  }
-})
 
 const handleLogout = () => {
   localStorage.removeItem('token')
   localStorage.removeItem('user')
-  isLoggedIn.value = false
-  user.value = null
+  syncAuth()
   router.push('/')
 }
 </script>
