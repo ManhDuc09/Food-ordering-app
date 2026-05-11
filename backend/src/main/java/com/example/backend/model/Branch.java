@@ -29,10 +29,9 @@ public class Branch {
 
 
     @Column(name = "latitude")
-    private Double latitude;
+    private java.math.BigDecimal latitude;
 
     @Column(name = "longitude")
-    private Double longitude;
-
+    private java.math.BigDecimal longitude;
     public Branch() {}
 }
