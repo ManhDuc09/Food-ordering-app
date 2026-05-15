@@ -1,26 +1,66 @@
 <script setup>
-import { ref } from 'vue'
-import ProductCard from './ProductCard.vue' // Import component con
+import { ref, onMounted } from 'vue'
+import ProductCard from './ProductCard.vue'
+import { fetchProducts } from '@/api/product.js'
 
-const categories = ref([
-  {
-    id: 1,
-    title: 'ƯU ĐÃI',
-    products: [
-      { id: 101, name: 'Combo 99K', price: 99000, originalPrice: 139000, description: '3 Miếng Gà Rán + 1 Mì Ý Popcorn', image: 'https://placehold.co/400x300?text=Combo+99K' },
-      { id: 102, name: 'Combo Cùng Vui', price: 199000, originalPrice: 205000, description: 'Combo 6 Miếng Gà Rán Tặng kèm 3 lon Pepsi', image: 'https://placehold.co/400x300?text=Combo+Vui' },
-      { id: 103, name: 'Combo Cùng Tiệc', price: 259000, originalPrice: 315000, description: 'Combo 7 Miếng Gà Rán Tặng 2 Miếng Gà + 3 Pepsi', image: 'https://placehold.co/400x300?text=Combo+Tiec' },
-    ]
-  },
-  {
-    id: 2,
-    title: 'MÓN MỚI',
-    products: [
-      { id: 201, name: '1 Bánh Wrap Xốt Nhiệt Đới', price: 35000, isNew: true, description: 'Bánh Wrap Gà Tenders giòn cuộn tortilla nướng mềm mại...', image: 'https://placehold.co/400x300?text=Wrap+1' },
-      { id: 204, name: 'Khoai Lắc Phô Mai (L)', price: 32000, isNew: true, description: 'Khoai tây chiên giòn tan, lắc đều cùng phô mai thơm ngậy', image: 'https://placehold.co/400x300?text=Khoai+Lac' },
-    ]
+const categories = ref([])
+
+const loadData = async () => {
+  try {
+    const productsData = await fetchProducts()
+
+    // Create a map for categories based on products' categoryNames
+    const categoryMap = {}
+
+    productsData.forEach(product => {
+      if (product.categoryNames && product.categoryNames.length > 0) {
+        product.categoryNames.forEach(catName => {
+          if (!categoryMap[catName]) {
+            categoryMap[catName] = {
+              id: catName, // Use category name as id since we don't have categoryId
+              title: catName,
+              products: []
+            }
+          }
+          categoryMap[catName].products.push({
+            id: product.productId,
+            name: product.name,
+            price: parseFloat(product.price),
+            description: product.description,
+            image: product.imageUrl,
+            isAvailable: product.isAvailable
+          })
+        })
+      } else {
+        // If no categories, put in a default category
+        if (!categoryMap['TẤT CẢ SẢN PHẨM']) {
+          categoryMap['TẤT CẢ SẢN PHẨM'] = {
+            id: 'default',
+            title: 'TẤT CẢ SẢN PHẨM',
+            products: []
+          }
+        }
+        categoryMap['TẤT CẢ SẢN PHẨM'].products.push({
+          id: product.productId,
+          name: product.name,
+          price: parseFloat(product.price),
+          description: product.description,
+          image: product.imageUrl,
+          isAvailable: product.isAvailable
+        })
+      }
+    })
+
+    // Convert map to array
+    categories.value = Object.values(categoryMap)
+  } catch (error) {
+    console.error('Failed to load data:', error)
   }
-])
+}
+
+onMounted(() => {
+  loadData()
+})
 </script>
 
 <template>

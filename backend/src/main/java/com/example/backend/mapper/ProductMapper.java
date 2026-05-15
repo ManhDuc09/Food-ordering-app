@@ -13,7 +13,6 @@ import java.util.stream.Collectors;
 
 @Mapper(componentModel = "spring")
 public interface ProductMapper {
-    @Mapping(target = "price", ignore = true)
     @Mapping(target = "categoryNames", source = "categories", qualifiedByName = "mapCategoryNames")
     ProductResponse productToResponse(Product product);
 
