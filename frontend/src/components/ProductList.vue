@@ -2,59 +2,67 @@
 import { ref, onMounted } from 'vue'
 import ProductCard from './ProductCard.vue'
 import { fetchProducts } from '@/api/product.js'
+import { fetchCategories } from '@/api/categories.js'
 
 const categories = ref([])
+const isLoading = ref(true)
 
 const loadData = async () => {
   try {
-    const productsData = await fetchProducts()
+    const [categoryData, productsData] = await Promise.all([
+      fetchCategories(),
+      fetchProducts()
+    ])
 
-    // Create a map for categories based on products' categoryNames
     const categoryMap = {}
 
+    categoryData.forEach(category => {
+      categoryMap[category.name] = {
+        categoryId: category.categoryId,
+        name: category.name,
+        products: []
+      }
+    })
+
     productsData.forEach(product => {
+      const productEntry = {
+        id: product.productId,
+        name: product.name,
+        price: parseFloat(product.price || 0),
+        description: product.description || 'Món ngon sắp có mặt',
+        image: product.imageUrl || '/placeholder-image.png',
+        isAvailable: product.isAvailable
+      }
+
       if (product.categoryNames && product.categoryNames.length > 0) {
         product.categoryNames.forEach(catName => {
           if (!categoryMap[catName]) {
             categoryMap[catName] = {
-              id: catName, // Use category name as id since we don't have categoryId
-              title: catName,
+              categoryId: `unknown-${catName}`,
+              name: catName,
               products: []
             }
           }
-          categoryMap[catName].products.push({
-            id: product.productId,
-            name: product.name,
-            price: parseFloat(product.price),
-            description: product.description,
-            image: product.imageUrl,
-            isAvailable: product.isAvailable
-          })
+          categoryMap[catName].products.push(productEntry)
         })
       } else {
-        // If no categories, put in a default category
-        if (!categoryMap['TẤT CẢ SẢN PHẨM']) {
-          categoryMap['TẤT CẢ SẢN PHẨM'] = {
-            id: 'default',
-            title: 'TẤT CẢ SẢN PHẨM',
+        const fallbackKey = 'uncategorized'
+        if (!categoryMap[fallbackKey]) {
+          categoryMap[fallbackKey] = {
+            categoryId: fallbackKey,
+            name: 'Khác',
             products: []
           }
         }
-        categoryMap['TẤT CẢ SẢN PHẨM'].products.push({
-          id: product.productId,
-          name: product.name,
-          price: parseFloat(product.price),
-          description: product.description,
-          image: product.imageUrl,
-          isAvailable: product.isAvailable
-        })
+        categoryMap[fallbackKey].products.push(productEntry)
       }
     })
 
-    // Convert map to array
     categories.value = Object.values(categoryMap)
   } catch (error) {
-    console.error('Failed to load data:', error)
+    console.error('Failed to load categories or products:', error)
+  } finally {
+    isLoading.value = false
   }
 }
 
@@ -66,21 +74,34 @@ onMounted(() => {
 <template>
   <div class="bg-gray-50 min-h-screen py-10 px-4 md:px-8">
     <div class="max-w-7xl mx-auto space-y-16">
-      
-      <section v-for="category in categories" :key="category.id">
-        <h2 class="text-2xl font-extrabold text-gray-800 mb-8 uppercase tracking-tight">
-          {{ category.title }}
-        </h2>
+      <div v-if="isLoading" class="text-center p-10 text-gray-500">
+        Loading products and categories...
+      </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <ProductCard 
-            v-for="product in category.products" 
-            :key="product.id" 
-            :product="product"
-          />
-        </div>
-      </section>
+      <template v-else>
+        <section v-for="category in categories" :key="category.categoryId">
+          <h2 class="text-2xl font-extrabold text-gray-800 mb-8 uppercase tracking-tight">
+            {{ category.name }}
+          </h2>
 
+          <div v-if="category.products.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <ProductCard 
+              v-for="product in category.products" 
+              :key="product.id" 
+              :product="product"
+            />
+          </div>
+
+          <div v-else class="rounded-3xl border border-dashed border-gray-300 bg-white p-10 text-center text-gray-500">
+            <p class="text-lg font-semibold text-gray-700 mb-2">
+              New products for this category are coming soon.
+            </p>
+            <p class="text-sm">
+              Check back later for awesome items in {{ category.name }}.
+            </p>
+          </div>
+        </section>
+      </template>
     </div>
   </div>
 </template>

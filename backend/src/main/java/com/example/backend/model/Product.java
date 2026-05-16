@@ -2,6 +2,8 @@ package com.example.backend.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.math.BigDecimal;
@@ -11,9 +13,12 @@ import java.util.UUID;
 @Data
 @Entity
 @Table(name = "products")
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString(exclude = "categories")
 public class Product {
 
     @Id
+    @EqualsAndHashCode.Include
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "product_id", updatable = false, nullable = false)
     private UUID productId;

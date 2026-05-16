@@ -2,6 +2,7 @@ package com.example.backend.service;
 
 import com.example.backend.dto.product.ProductResponse;
 import com.example.backend.mapper.ProductMapper;
+import com.example.backend.model.Product;
 import com.example.backend.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,19 +19,21 @@ public class ProductService {
     @Autowired
     private ProductMapper productMapper;
 
-    public List<ProductResponse> getAllProducts() {
+    public List<ProductResponse> getAllProducts() {  
+        List<Product> products = productRepository.findAllWithCategories();
+    
+    
+    products.forEach(p -> System.out.println("Product: " + p.getName() + " | Categories size: " + p.getCategories().size()));
+        return productRepository.findAllWithCategories() // Updated method
+                .stream()  
+                .map(productMapper::productToResponse)  
+                .toList();  
+    }  
 
-        return productRepository.findAll()
-                .stream()
-                .map(productMapper::productToResponse)
-                .toList();
-    }
-
-    public List<ProductResponse> getAvailableProducts() {
-   
-        return productRepository.findByIsAvailableTrue()
-                .stream()
-                .map(productMapper::productToResponse)
-                .toList();
+    public List<ProductResponse> getAvailableProducts() {  
+        return productRepository.findByIsAvailableTrueWithCategories() // Updated method
+                .stream()  
+                .map(productMapper::productToResponse)  
+                .toList();  
     }
 }
