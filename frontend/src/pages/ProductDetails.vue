@@ -2,16 +2,35 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { fetchProduct } from '@/api/product.js'
+import { addToCart } from '@/store/cart.js'
 
 const route = useRoute()
 const product = ref(null)
 const quantity = ref(1)
 const isLoading = ref(true)
 const error = ref('')
+const successMessage = ref('')
 
 const increment = () => quantity.value++
 const decrement = () => {
   if (quantity.value > 1) quantity.value--
+}
+
+const addProductToCart = () => {
+  if (!product.value) {
+    return
+  }
+
+  const added = addToCart(product.value, quantity.value)
+  if (added) {
+    successMessage.value = 'Đã thêm sản phẩm vào giỏ hàng.'
+  } else {
+    successMessage.value = 'Không thể thêm sản phẩm vào giỏ hàng.'
+  }
+
+  setTimeout(() => {
+    successMessage.value = ''
+  }, 2500)
 }
 
 const formatPrice = (value) => {
@@ -40,7 +59,7 @@ const loadProduct = async () => {
 const imageUrl = computed(() => product.value?.imageUrl || 'https://placehold.co/600x400?text=No+Image')
 const title = computed(() => product.value?.name || 'Đang tải sản phẩm...')
 const description = computed(() => product.value?.description || 'Mô tả sản phẩm sẽ có trong vài giây.')
-const price = computed(() => product.value?.price || 0)
+const price = computed(() => Number(product.value?.price) || 0)
 const isNew = computed(() => product.value?.isAvailable === true)
 
 onMounted(loadProduct)
@@ -100,9 +119,12 @@ onMounted(loadProduct)
                 </button>
               </div>
 
-              <button class="bg-red-600 text-white font-bold py-3 px-8 rounded-full shadow-lg shadow-red-200 hover:bg-red-700 transition-all active:scale-95 flex-grow ml-6">
+              <button @click="addProductToCart" class="bg-red-600 text-white font-bold py-3 px-8 rounded-full shadow-lg shadow-red-200 hover:bg-red-700 transition-all active:scale-95 flex-grow ml-6">
                 Thêm vào giỏ ({{ formatPrice(price * quantity) }})
               </button>
+            </div>
+            <div v-if="successMessage" class="mt-4 text-sm text-green-600 font-medium">
+              {{ successMessage }}
             </div>
           </div>
         </div>
