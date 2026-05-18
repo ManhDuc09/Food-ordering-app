@@ -115,7 +115,7 @@ const loading = ref(false)
 const error = ref('')
 
 
-const successMessage = ref('') // Added for success feedback
+const successMessage = ref('') 
 
 const handleLogin = async () => {
   error.value = ''
@@ -125,7 +125,7 @@ const handleLogin = async () => {
   try {
     const data = await authApi.login(email.value, password.value)
     
-    // 1. Show success feedback
+    
     successMessage.value = "Đăng nhập thành công! Đang chuyển hướng..."
     
     localStorage.setItem('token', data.token)
@@ -133,13 +133,12 @@ const handleLogin = async () => {
     
     syncAuth()
 
-    // 2. Small delay so they can actually see the success message
     setTimeout(() => {
-      router.push('/')
+      const redirectPath = router.currentRoute.value.query.redirect || '/'
+      router.push(redirectPath)
     }, 1500)
 
   } catch (err) {
-    // 3. Capture the actual error message from your API
     error.value = err.response?.data?.message || err.message || "Email hoặc mật khẩu không đúng!"
   } finally {
     loading.value = false

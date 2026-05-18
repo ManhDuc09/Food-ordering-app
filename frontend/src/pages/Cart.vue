@@ -53,7 +53,7 @@
               <span>Tổng giá</span>
               <span>{{ formatPrice(totalPrice) }}</span>
             </div>
-            <button class="w-full bg-red-600 text-white py-3 rounded-full font-bold hover:bg-red-700 transition-all">
+            <button @click="goToPayment" class="w-full bg-red-600 text-white py-3 rounded-full font-bold hover:bg-red-700 transition-all">
               Thanh toán
             </button>
           </div>
@@ -65,11 +65,17 @@
 
 <script setup>
 import { computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { cartState } from '@/store/cart.js'
 
+const router = useRouter()
 const cartItems = computed(() => cartState.items)
 const totalQuantity = computed(() => cartItems.value.reduce((sum, item) => sum + item.quantity, 0))
 const totalPrice = computed(() => cartItems.value.reduce((sum, item) => sum + item.price * item.quantity, 0))
+
+const goToPayment = () => {
+  router.push('/payment')
+}
 
 const formatPrice = (value) => {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' })

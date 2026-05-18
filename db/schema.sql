@@ -94,3 +94,6 @@ CREATE TABLE IF NOT EXISTS payments (
     status VARCHAR(50),
     paid_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+ALTER TABLE order_items
+ADD COLUMN product_id UUID REFERENCES products(product_id);
