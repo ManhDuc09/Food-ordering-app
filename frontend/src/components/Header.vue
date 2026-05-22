@@ -24,7 +24,9 @@
       </template>
 
       <template v-else>
-        <span class="font-bold text-sm">{{ authState.user?.email }}</span>
+        <router-link to="/profile" class="font-bold text-sm hover:text-red-600 transition-colors">
+          {{ authState.user?.email }}
+        </router-link>
         <button @click="handleLogout" class="font-bold text-sm hover:text-red-600 transition-colors">
           Đăng xuất
         </button>

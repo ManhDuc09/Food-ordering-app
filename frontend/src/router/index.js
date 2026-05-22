@@ -9,19 +9,21 @@ import Map from '../pages/Map.vue'
 import Cart from '../pages/Cart.vue'
 import Register from '../pages/Register.vue'
 import Payment from '../pages/Payment.vue'
+import Profile from '../pages/Profile.vue'
 import { authState, syncAuth } from '../store/auth'
 
 
 const routes = [
   { path: '/', component: Home },
   { path: '/menu', component: Menu },
-  { 
-    path: '/product/:id', 
-    name: 'ProductDetails', 
-    component: ProductDetails 
+  {
+    path: '/product/:id',
+    name: 'ProductDetails',
+    component: ProductDetails
   },
   { path: '/cart', component: Cart },
   { path: '/payment', component: Payment, meta: { requiresAuth: true } },
+  { path: '/profile', component: Profile, meta: { requiresAuth: true } },
   { path: '/login' , component: Login},
   { path: '/register', component: Register },
   { path: '/map', component: Map}
