@@ -13,7 +13,6 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/branches")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:5173")
 public class BranchController {
 
     private final BranchService branchService;

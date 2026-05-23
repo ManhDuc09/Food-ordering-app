@@ -38,7 +38,6 @@ public class AuthService {
 
         public AuthResponse register(AuthRequest request) {
         User user = new User();
-        user.setFullName("New User");
         user.setEmail(request.getEmail());
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         user.setFullName(request.getFullName());

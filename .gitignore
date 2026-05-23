@@ -12,6 +12,7 @@ backend/*.jar
 .vscode/
 .idea/
 
+.claude/settings.local.json
 
 .DS_Store
 Thumbs.db
