@@ -4,9 +4,11 @@ import com.example.backend.dto.order.OrderRequest;
 import com.example.backend.dto.order.OrderResponse;
 import com.example.backend.model.Order;
 import com.example.backend.model.OrderItem;
+import com.example.backend.model.Payment;
 import com.example.backend.model.Product;
 import com.example.backend.model.User;
 import com.example.backend.repository.OrderRepository;
+import com.example.backend.repository.PaymentRepository;
 import com.example.backend.repository.ProductRepository;
 import com.example.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -24,6 +27,7 @@ import java.util.Set;
 public class OrderService {
 
     private final OrderRepository orderRepository;
+    private final PaymentRepository paymentRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
 
@@ -70,6 +74,13 @@ public class OrderService {
         order.setTotalAmount(totalAmount);
 
         Order savedOrder = orderRepository.save(order);
+
+        Payment payment = new Payment();
+        payment.setOrder(savedOrder);
+        payment.setMethod(request.getPaymentMethod() != null ? request.getPaymentMethod().toUpperCase() : "COD");
+        payment.setStatus("COD".equals(payment.getMethod()) ? "paid" : "pending");
+        payment.setPaidAt(LocalDateTime.now());
+        paymentRepository.save(payment);
 
         return new OrderResponse(savedOrder.getOrderId(), savedOrder.getStatus(), savedOrder.getTotalAmount());
     }

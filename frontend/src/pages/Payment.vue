@@ -76,32 +76,44 @@
               <div class="rounded-3xl border border-gray-200 bg-gray-50 p-5">
                 <p class="text-sm font-bold text-gray-700 mb-3">Phương thức thanh toán</p>
                 <div class="space-y-3">
-                  <label class="flex items-center gap-3 cursor-pointer">
-                    <input type="radio" value="card" v-model="form.paymentMethod" class="h-4 w-4 text-red-600" />
-                    <span>Thẻ tín dụng / Debit</span>
+                  <label
+                    class="flex items-center gap-3 cursor-pointer rounded-2xl border-2 px-4 py-3 transition-colors"
+                    :class="form.paymentMethod === 'COD' ? 'border-red-500 bg-red-50' : 'border-transparent bg-white'"
+                  >
+                    <input type="radio" value="COD" v-model="form.paymentMethod" class="h-4 w-4 accent-red-600" />
+                    <span class="text-2xl">🛵</span>
+                    <div>
+                      <p class="font-semibold text-sm">Thanh toán khi nhận hàng</p>
+                      <p class="text-xs text-gray-400">Trả tiền mặt khi giao hàng</p>
+                    </div>
                   </label>
-                  <label class="flex items-center gap-3 cursor-pointer">
-                    <input type="radio" value="cod" v-model="form.paymentMethod" class="h-4 w-4 text-red-600" />
-                    <span>Thanh toán khi nhận hàng</span>
+                  <label
+                    class="flex items-center gap-3 cursor-pointer rounded-2xl border-2 px-4 py-3 transition-colors"
+                    :class="form.paymentMethod === 'MOMO' ? 'border-pink-500 bg-pink-50' : 'border-transparent bg-white'"
+                  >
+                    <input type="radio" value="MOMO" v-model="form.paymentMethod" class="h-4 w-4 accent-pink-600" />
+                    <span class="text-2xl">💜</span>
+                    <div>
+                      <p class="font-semibold text-sm">MoMo</p>
+                      <p class="text-xs text-gray-400">Ví điện tử MoMo</p>
+                    </div>
+                  </label>
+                  <label
+                    class="flex items-center gap-3 cursor-pointer rounded-2xl border-2 px-4 py-3 transition-colors"
+                    :class="form.paymentMethod === 'VNPAY' ? 'border-blue-500 bg-blue-50' : 'border-transparent bg-white'"
+                  >
+                    <input type="radio" value="VNPAY" v-model="form.paymentMethod" class="h-4 w-4 accent-blue-600" />
+                    <span class="text-2xl">🏦</span>
+                    <div>
+                      <p class="font-semibold text-sm">VNPay</p>
+                      <p class="text-xs text-gray-400">Thanh toán qua VNPay</p>
+                    </div>
                   </label>
                 </div>
               </div>
 
-              <div v-if="form.paymentMethod === 'card'" class="grid gap-4">
-                <label class="block">
-                  <span class="text-sm font-bold text-gray-700">Số thẻ</span>
-                  <input v-model="form.cardNumber" type="text" placeholder="1234 5678 9012 3456" maxlength="19" class="mt-2 w-full rounded-3xl border border-gray-200 px-4 py-3 focus:border-red-500 focus:outline-none" />
-                </label>
-                <div class="grid grid-cols-2 gap-4">
-                  <label class="block">
-                    <span class="text-sm font-bold text-gray-700">Hạn dùng</span>
-                    <input v-model="form.expiry" type="text" placeholder="MM/YY" maxlength="5" class="mt-2 w-full rounded-3xl border border-gray-200 px-4 py-3 focus:border-red-500 focus:outline-none" />
-                  </label>
-                  <label class="block">
-                    <span class="text-sm font-bold text-gray-700">CVV</span>
-                    <input v-model="form.cvv" type="password" placeholder="123" maxlength="4" class="mt-2 w-full rounded-3xl border border-gray-200 px-4 py-3 focus:border-red-500 focus:outline-none" />
-                  </label>
-                </div>
+              <div v-if="form.paymentMethod !== 'COD'" class="rounded-3xl border border-dashed border-yellow-400 bg-yellow-50 px-5 py-4 text-sm text-yellow-700">
+                Cổng thanh toán <strong>{{ form.paymentMethod }}</strong> đang được tích hợp. Đơn hàng sẽ được đặt và thanh toán xác nhận sau.
               </div>
 
               <div class="rounded-3xl border border-gray-200 bg-gray-50 p-6">
@@ -138,10 +150,7 @@ const form = ref({
   fullName: '',
   phone: '',
   address: '',
-  paymentMethod: 'cod',
-  cardNumber: '',
-  expiry: '',
-  cvv: ''
+  paymentMethod: 'COD'
 })
 const error = ref('')
 const submitted = ref(false)
@@ -166,27 +175,6 @@ const validateForm = () => {
   if (!form.value.fullName.trim() || !form.value.phone.trim() || !form.value.address.trim()) {
     error.value = 'Vui lòng điền đầy đủ thông tin liên hệ và địa chỉ.'
     return false
-  }
-  if (form.value.paymentMethod === 'card') {
-    if (!form.value.cardNumber.trim() || !form.value.expiry.trim() || !form.value.cvv.trim()) {
-      error.value = 'Vui lòng điền đầy đủ thông tin thẻ.'
-      return false
-    }
-    const cardPattern = /^[0-9 ]{13,19}$/
-    const expiryPattern = /^(0[1-9]|1[0-2])\/\d{2}$/
-    const cvvPattern = /^[0-9]{3,4}$/
-    if (!cardPattern.test(form.value.cardNumber.replace(/\s+/g, ''))) {
-      error.value = 'Số thẻ không hợp lệ.'
-      return false
-    }
-    if (!expiryPattern.test(form.value.expiry)) {
-      error.value = 'Hạn dùng không hợp lệ (MM/YY).'
-      return false
-    }
-    if (!cvvPattern.test(form.value.cvv)) {
-      error.value = 'CVV không hợp lệ.'
-      return false
-    }
   }
   return true
 }

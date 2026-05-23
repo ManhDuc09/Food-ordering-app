@@ -188,7 +188,8 @@ const initials = computed(() => {
 onMounted(async () => {
   const [prof, addrs] = await Promise.all([
     profileApi.getProfile(),
-    profileApi.getAddresses()
+    profileApi.getAddresses(),
+    console.log('Token:', localStorage.getItem('token'))
   ])
   profile.value = prof
   addresses.value = addrs
@@ -214,6 +215,7 @@ async function saveProfile() {
   try {
     profile.value = await profileApi.updateProfile(profileForm.value)
     editingProfile.value = false
+    console.log('Token:', localStorage.getItem('token'))
   } catch {
     profileError.value = 'Cập nhật thất bại, thử lại sau'
   } finally {
