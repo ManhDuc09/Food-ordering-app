@@ -1,5 +1,6 @@
 package com.example.backend.service;
 
+import com.example.backend.dto.order.OrderDetailResponse;
 import com.example.backend.dto.order.OrderRequest;
 import com.example.backend.dto.order.OrderResponse;
 import com.example.backend.model.Order;
@@ -12,7 +13,6 @@ import com.example.backend.repository.PaymentRepository;
 import com.example.backend.repository.ProductRepository;
 import com.example.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,7 +20,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -33,12 +36,7 @@ public class OrderService {
 
     @Transactional
     public OrderResponse createOrder(OrderRequest request) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new RuntimeException("Unauthorized");
-        }
-
-        String email = authentication.getName();
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Authenticated user not found"));
 
@@ -83,5 +81,68 @@ public class OrderService {
         paymentRepository.save(payment);
 
         return new OrderResponse(savedOrder.getOrderId(), savedOrder.getStatus(), savedOrder.getTotalAmount());
+    }
+
+    @Transactional(readOnly = true)
+    public List<OrderDetailResponse> getMyOrders() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(email).orElseThrow();
+
+        return orderRepository.findByUserOrderByCreatedAtDesc(user).stream()
+                .map(order -> {
+                    Payment payment = paymentRepository.findByOrder(order).orElse(null);
+                    return toDetailResponse(order, payment);
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public OrderDetailResponse updatePaymentMethod(UUID orderId, String newMethod) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(email).orElseThrow();
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        if (!order.getUser().getUserId().equals(user.getUserId())) {
+            throw new RuntimeException("Unauthorized");
+        }
+
+        Payment payment = paymentRepository.findByOrder(order)
+                .orElseThrow(() -> new RuntimeException("Payment not found"));
+
+        payment.setMethod(newMethod.toUpperCase());
+        payment.setStatus("COD".equals(payment.getMethod()) ? "paid" : "pending");
+        if ("COD".equals(payment.getMethod())) {
+            payment.setPaidAt(LocalDateTime.now());
+        }
+        paymentRepository.save(payment);
+
+        return toDetailResponse(order, payment);
+    }
+
+    private OrderDetailResponse toDetailResponse(Order order, Payment payment) {
+        OrderDetailResponse dto = new OrderDetailResponse();
+        dto.setOrderId(order.getOrderId());
+        dto.setStatus(order.getStatus());
+        dto.setTotalAmount(order.getTotalAmount());
+        dto.setCreatedAt(order.getCreatedAt());
+
+        if (payment != null) {
+            dto.setPaymentId(payment.getId());
+            dto.setPaymentMethod(payment.getMethod());
+            dto.setPaymentStatus(payment.getStatus());
+        }
+
+        List<OrderDetailResponse.OrderItemDto> items = order.getItems().stream()
+                .map(item -> new OrderDetailResponse.OrderItemDto(
+                        item.getProduct().getName(),
+                        item.getQuantity(),
+                        item.getProduct().getPrice()
+                ))
+                .collect(Collectors.toList());
+        dto.setItems(items);
+
+        return dto;
     }
 }

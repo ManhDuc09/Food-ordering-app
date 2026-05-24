@@ -13,8 +13,21 @@
         </div>
       </div>
 
-      <!-- Personal Info Card -->
-      <div class="bg-white rounded-2xl shadow-sm p-6">
+      <!-- Tabs -->
+      <div class="flex border-b border-gray-200">
+        <button
+          v-for="tab in tabs"
+          :key="tab.key"
+          @click="activeTab = tab.key"
+          class="px-5 py-3 text-sm font-semibold border-b-2 transition-colors"
+          :class="activeTab === tab.key
+            ? 'border-red-600 text-red-600'
+            : 'border-transparent text-gray-500 hover:text-gray-700'"
+        >{{ tab.label }}</button>
+      </div>
+
+      <!-- Tab: Personal Info -->
+      <div v-if="activeTab === 'info'" class="bg-white rounded-2xl shadow-sm p-6">
         <div class="flex items-center justify-between mb-4">
           <h2 class="text-lg font-bold">Thông tin cá nhân</h2>
           <button
@@ -42,43 +55,33 @@
         <div v-else class="space-y-3">
           <div>
             <label class="text-sm text-gray-500 block mb-1">Họ và tên</label>
-            <input
-              v-model="profileForm.fullName"
-              type="text"
-              class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-400"
-            />
+            <input v-model="profileForm.fullName" type="text"
+              class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-400" />
           </div>
           <div>
             <label class="text-sm text-gray-500 block mb-1">Số điện thoại</label>
-            <input
-              v-model="profileForm.phoneNumber"
-              type="text"
-              class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-400"
-            />
+            <input v-model="profileForm.phoneNumber" type="text"
+              class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-400" />
           </div>
           <p v-if="profileError" class="text-red-500 text-xs">{{ profileError }}</p>
           <div class="flex gap-2 pt-1">
-            <button
-              @click="saveProfile"
-              :disabled="savingProfile"
-              class="bg-red-600 text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-red-700 disabled:opacity-50"
-            >{{ savingProfile ? 'Đang lưu...' : 'Lưu' }}</button>
-            <button
-              @click="cancelEditProfile"
-              class="text-sm text-gray-500 px-4 py-2 rounded-lg hover:bg-gray-100"
-            >Hủy</button>
+            <button @click="saveProfile" :disabled="savingProfile"
+              class="bg-red-600 text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-red-700 disabled:opacity-50">
+              {{ savingProfile ? 'Đang lưu...' : 'Lưu' }}
+            </button>
+            <button @click="cancelEditProfile"
+              class="text-sm text-gray-500 px-4 py-2 rounded-lg hover:bg-gray-100">Hủy</button>
           </div>
         </div>
       </div>
 
-      <!-- Addresses Card -->
-      <div class="bg-white rounded-2xl shadow-sm p-6">
+      <!-- Tab: Addresses -->
+      <div v-if="activeTab === 'addresses'" class="bg-white rounded-2xl shadow-sm p-6">
         <div class="flex items-center justify-between mb-4">
           <h2 class="text-lg font-bold">Địa chỉ giao hàng</h2>
-          <button
-            @click="openAddAddress"
-            class="text-sm text-red-600 font-semibold hover:underline"
-          >+ Thêm địa chỉ</button>
+          <button @click="openAddAddress" class="text-sm text-red-600 font-semibold hover:underline">
+            + Thêm địa chỉ
+          </button>
         </div>
 
         <div v-if="addresses.length === 0" class="text-sm text-gray-400 text-center py-6">
@@ -86,76 +89,151 @@
         </div>
 
         <ul class="space-y-3">
-          <li
-            v-for="addr in addresses"
-            :key="addr.id"
+          <li v-for="addr in addresses" :key="addr.id"
             class="border rounded-xl p-4 text-sm"
-            :class="addr.isDefault ? 'border-red-300 bg-red-50' : 'border-gray-100'"
-          >
+            :class="addr.isDefault ? 'border-red-300 bg-red-50' : 'border-gray-100'">
             <div class="flex items-start justify-between gap-2">
               <div>
                 <p class="font-medium">{{ addr.street }}</p>
                 <p class="text-gray-500">{{ addr.city }}</p>
-                <span
-                  v-if="addr.isDefault"
-                  class="inline-block mt-1 text-xs text-red-600 font-semibold bg-red-100 px-2 py-0.5 rounded-full"
-                >Mặc định</span>
+                <span v-if="addr.isDefault"
+                  class="inline-block mt-1 text-xs text-red-600 font-semibold bg-red-100 px-2 py-0.5 rounded-full">
+                  Mặc định
+                </span>
               </div>
               <div class="flex flex-col gap-1 items-end shrink-0">
                 <button @click="openEditAddress(addr)" class="text-xs text-blue-500 hover:underline">Sửa</button>
                 <button @click="removeAddress(addr.id)" class="text-xs text-red-400 hover:underline">Xóa</button>
-                <button
-                  v-if="!addr.isDefault"
-                  @click="makeDefault(addr.id)"
-                  class="text-xs text-gray-500 hover:underline"
-                >Đặt mặc định</button>
+                <button v-if="!addr.isDefault" @click="makeDefault(addr.id)"
+                  class="text-xs text-gray-500 hover:underline">Đặt mặc định</button>
               </div>
             </div>
           </li>
         </ul>
       </div>
 
+      <!-- Tab: Orders -->
+      <div v-if="activeTab === 'orders'" class="space-y-4">
+        <div v-if="loadingOrders" class="text-center py-10 text-gray-400 text-sm">Đang tải...</div>
+
+        <div v-else-if="orders.length === 0" class="bg-white rounded-2xl shadow-sm p-8 text-center text-gray-400 text-sm">
+          Bạn chưa có đơn hàng nào.
+        </div>
+
+        <div v-for="order in orders" :key="order.orderId"
+          class="bg-white rounded-2xl shadow-sm p-5 space-y-3">
+
+          <!-- Order header -->
+          <div class="flex items-start justify-between gap-2 flex-wrap">
+            <div>
+              <p class="text-xs text-gray-400">{{ formatDate(order.createdAt) }}</p>
+              <p class="text-xs text-gray-400 font-mono">{{ order.orderId.slice(0, 8).toUpperCase() }}</p>
+            </div>
+            <div class="flex items-center gap-2 flex-wrap justify-end">
+              <!-- Payment status badge -->
+              <span v-if="order.paymentStatus === 'pending'"
+                class="text-xs font-semibold px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700">
+                Chưa thanh toán
+              </span>
+              <span v-else
+                class="text-xs font-semibold px-2 py-0.5 rounded-full bg-green-100 text-green-700">
+                Đã thanh toán
+              </span>
+              <!-- Order status badge -->
+              <span class="text-xs font-semibold px-2 py-0.5 rounded-full"
+                :class="{
+                  'bg-gray-100 text-gray-600': order.status === 'pending',
+                  'bg-blue-100 text-blue-600': order.status === 'confirmed',
+                  'bg-green-100 text-green-700': order.status === 'delivered',
+                  'bg-red-100 text-red-600': order.status === 'cancelled'
+                }">
+                {{ orderStatusLabel(order.status) }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Items -->
+          <ul class="space-y-1 text-sm border-t border-gray-50 pt-3">
+            <li v-for="(item, i) in order.items" :key="i" class="flex justify-between text-gray-700">
+              <span>{{ item.productName }} × {{ item.quantity }}</span>
+              <span class="font-medium">{{ formatPrice(item.price * item.quantity) }}</span>
+            </li>
+          </ul>
+
+          <!-- Total + payment method -->
+          <div class="border-t border-gray-100 pt-3 flex items-center justify-between">
+            <span class="text-sm text-gray-500">
+              {{ paymentMethodLabel(order.paymentMethod) }}
+            </span>
+            <span class="font-bold text-base">{{ formatPrice(order.totalAmount) }}</span>
+          </div>
+
+          <!-- Change method button (only for pending gateway payments) -->
+          <div v-if="order.paymentStatus === 'pending' && order.paymentMethod !== 'COD'">
+            <button @click="openChangeMethod(order)"
+              class="w-full text-sm font-semibold text-red-600 border border-red-200 rounded-xl py-2 hover:bg-red-50 transition-colors">
+              Đổi phương thức thanh toán
+            </button>
+          </div>
+        </div>
+      </div>
+
     </div>
 
     <!-- Address Modal -->
-    <div
-      v-if="showAddressModal"
-      class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4"
-      @click.self="closeAddressModal"
-    >
+    <div v-if="showAddressModal" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4"
+      @click.self="closeAddressModal">
       <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
         <h3 class="text-lg font-bold mb-4">{{ editingAddress ? 'Sửa địa chỉ' : 'Thêm địa chỉ' }}</h3>
         <div class="space-y-3">
           <div>
             <label class="text-sm text-gray-500 block mb-1">Địa chỉ (đường, số nhà)</label>
-            <input
-              v-model="addressForm.street"
-              type="text"
-              placeholder="Ví dụ: 123 Nguyễn Huệ"
-              class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-400"
-            />
+            <input v-model="addressForm.street" type="text" placeholder="Ví dụ: 123 Nguyễn Huệ"
+              class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-400" />
           </div>
           <div>
             <label class="text-sm text-gray-500 block mb-1">Thành phố</label>
-            <input
-              v-model="addressForm.city"
-              type="text"
-              placeholder="Ví dụ: Hồ Chí Minh"
-              class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-400"
-            />
+            <input v-model="addressForm.city" type="text" placeholder="Ví dụ: Hồ Chí Minh"
+              class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-400" />
           </div>
           <p v-if="addressError" class="text-red-500 text-xs">{{ addressError }}</p>
           <div class="flex gap-2 pt-1">
-            <button
-              @click="saveAddress"
-              :disabled="savingAddress"
-              class="bg-red-600 text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-red-700 disabled:opacity-50"
-            >{{ savingAddress ? 'Đang lưu...' : 'Lưu' }}</button>
-            <button
-              @click="closeAddressModal"
-              class="text-sm text-gray-500 px-4 py-2 rounded-lg hover:bg-gray-100"
-            >Hủy</button>
+            <button @click="saveAddress" :disabled="savingAddress"
+              class="bg-red-600 text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-red-700 disabled:opacity-50">
+              {{ savingAddress ? 'Đang lưu...' : 'Lưu' }}
+            </button>
+            <button @click="closeAddressModal"
+              class="text-sm text-gray-500 px-4 py-2 rounded-lg hover:bg-gray-100">Hủy</button>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Change Payment Method Modal -->
+    <div v-if="showChangeMethodModal" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4"
+      @click.self="closeChangeMethod">
+      <div class="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl">
+        <h3 class="text-lg font-bold mb-4">Đổi phương thức thanh toán</h3>
+        <div class="space-y-3 mb-5">
+          <label v-for="m in paymentMethods" :key="m.value"
+            class="flex items-center gap-3 cursor-pointer rounded-xl border-2 px-4 py-3 transition-colors"
+            :class="selectedMethod === m.value ? 'border-red-500 bg-red-50' : 'border-gray-100'">
+            <input type="radio" :value="m.value" v-model="selectedMethod" class="h-4 w-4 accent-red-600" />
+            <span class="text-xl">{{ m.icon }}</span>
+            <div>
+              <p class="font-semibold text-sm">{{ m.label }}</p>
+              <p class="text-xs text-gray-400">{{ m.desc }}</p>
+            </div>
+          </label>
+        </div>
+        <p v-if="changeMethodError" class="text-red-500 text-xs mb-3">{{ changeMethodError }}</p>
+        <div class="flex gap-2">
+          <button @click="saveNewMethod" :disabled="savingMethod"
+            class="flex-1 bg-red-600 text-white text-sm font-semibold py-2 rounded-xl hover:bg-red-700 disabled:opacity-50">
+            {{ savingMethod ? 'Đang lưu...' : 'Xác nhận' }}
+          </button>
+          <button @click="closeChangeMethod"
+            class="flex-1 text-sm text-gray-500 py-2 rounded-xl hover:bg-gray-100">Hủy</button>
         </div>
       </div>
     </div>
@@ -166,8 +244,17 @@
 import { ref, computed, onMounted } from 'vue'
 import { profileApi } from '../api/profile'
 
+const tabs = [
+  { key: 'info', label: 'Thông tin cá nhân' },
+  { key: 'addresses', label: 'Địa chỉ' },
+  { key: 'orders', label: 'Đơn hàng' }
+]
+const activeTab = ref('info')
+
 const profile = ref({ fullName: '', email: '', phoneNumber: '' })
 const addresses = ref([])
+const orders = ref([])
+const loadingOrders = ref(false)
 
 const editingProfile = ref(false)
 const savingProfile = ref(false)
@@ -180,6 +267,18 @@ const savingAddress = ref(false)
 const addressError = ref('')
 const addressForm = ref({ street: '', city: '' })
 
+const showChangeMethodModal = ref(false)
+const changingOrder = ref(null)
+const selectedMethod = ref('COD')
+const savingMethod = ref(false)
+const changeMethodError = ref('')
+
+const paymentMethods = [
+  { value: 'COD', icon: '🛵', label: 'Thanh toán khi nhận hàng', desc: 'Trả tiền mặt khi giao hàng' },
+  { value: 'MOMO', icon: '💜', label: 'MoMo', desc: 'Ví điện tử MoMo' },
+  { value: 'VNPAY', icon: '🏦', label: 'VNPay', desc: 'Thanh toán qua VNPay' }
+]
+
 const initials = computed(() => {
   const name = profile.value.fullName || profile.value.email || '?'
   return name.charAt(0).toUpperCase()
@@ -188,34 +287,45 @@ const initials = computed(() => {
 onMounted(async () => {
   const [prof, addrs] = await Promise.all([
     profileApi.getProfile(),
-    profileApi.getAddresses(),
-    console.log('Token:', localStorage.getItem('token'))
+    profileApi.getAddresses()
   ])
   profile.value = prof
   addresses.value = addrs
 })
 
+// Load orders lazily when tab is first opened
+const ordersLoaded = ref(false)
+async function onOrdersTabOpen() {
+  if (ordersLoaded.value) return
+  loadingOrders.value = true
+  try {
+    orders.value = await profileApi.getMyOrders()
+    ordersLoaded.value = true
+  } finally {
+    loadingOrders.value = false
+  }
+}
+
+// Watch tab changes to load orders on demand
+import { watch } from 'vue'
+watch(activeTab, val => { if (val === 'orders') onOrdersTabOpen() })
+
+// --- Profile ---
 function startEditProfile() {
   profileForm.value = { fullName: profile.value.fullName || '', phoneNumber: profile.value.phoneNumber || '' }
   profileError.value = ''
   editingProfile.value = true
 }
 
-function cancelEditProfile() {
-  editingProfile.value = false
-}
+function cancelEditProfile() { editingProfile.value = false }
 
 async function saveProfile() {
-  if (!profileForm.value.fullName.trim()) {
-    profileError.value = 'Vui lòng nhập họ và tên'
-    return
-  }
+  if (!profileForm.value.fullName.trim()) { profileError.value = 'Vui lòng nhập họ và tên'; return }
   savingProfile.value = true
   profileError.value = ''
   try {
     profile.value = await profileApi.updateProfile(profileForm.value)
     editingProfile.value = false
-    console.log('Token:', localStorage.getItem('token'))
   } catch {
     profileError.value = 'Cập nhật thất bại, thử lại sau'
   } finally {
@@ -223,6 +333,7 @@ async function saveProfile() {
   }
 }
 
+// --- Addresses ---
 function openAddAddress() {
   editingAddress.value = null
   addressForm.value = { street: '', city: '' }
@@ -237,15 +348,10 @@ function openEditAddress(addr) {
   showAddressModal.value = true
 }
 
-function closeAddressModal() {
-  showAddressModal.value = false
-}
+function closeAddressModal() { showAddressModal.value = false }
 
 async function saveAddress() {
-  if (!addressForm.value.street.trim()) {
-    addressError.value = 'Vui lòng nhập địa chỉ'
-    return
-  }
+  if (!addressForm.value.street.trim()) { addressError.value = 'Vui lòng nhập địa chỉ'; return }
   savingAddress.value = true
   addressError.value = ''
   try {
@@ -254,8 +360,7 @@ async function saveAddress() {
       const idx = addresses.value.findIndex(a => a.id === updated.id)
       if (idx !== -1) addresses.value[idx] = updated
     } else {
-      const created = await profileApi.addAddress(addressForm.value)
-      addresses.value.push(created)
+      addresses.value.push(await profileApi.addAddress(addressForm.value))
     }
     showAddressModal.value = false
   } catch {
@@ -266,12 +371,53 @@ async function saveAddress() {
 }
 
 async function removeAddress(id) {
-  await profileApi.deleteAddress(id)
-  addresses.value = addresses.value.filter(a => a.id !== id)
+  try {
+    await profileApi.deleteAddress(id)
+    addresses.value = addresses.value.filter(a => a.id !== id)
+  } catch {
+    alert('Xóa địa chỉ thất bại')
+  }
 }
 
 async function makeDefault(id) {
   const updated = await profileApi.setDefaultAddress(id)
   addresses.value = addresses.value.map(a => ({ ...a, isDefault: a.id === updated.id }))
 }
+
+// --- Change payment method ---
+function openChangeMethod(order) {
+  changingOrder.value = order
+  selectedMethod.value = order.paymentMethod || 'COD'
+  changeMethodError.value = ''
+  showChangeMethodModal.value = true
+}
+
+function closeChangeMethod() { showChangeMethodModal.value = false }
+
+async function saveNewMethod() {
+  savingMethod.value = true
+  changeMethodError.value = ''
+  try {
+    const updated = await profileApi.updatePaymentMethod(changingOrder.value.orderId, selectedMethod.value)
+    const idx = orders.value.findIndex(o => o.orderId === updated.orderId)
+    if (idx !== -1) orders.value[idx] = updated
+    showChangeMethodModal.value = false
+  } catch {
+    changeMethodError.value = 'Cập nhật thất bại, thử lại sau'
+  } finally {
+    savingMethod.value = false
+  }
+}
+
+// --- Helpers ---
+const formatPrice = val =>
+  new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val).replace('₫', 'đ')
+
+const formatDate = iso => iso
+  ? new Intl.DateTimeFormat('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(iso))
+  : '—'
+
+const paymentMethodLabel = m => ({ COD: 'Tiền mặt khi nhận', MOMO: 'MoMo', VNPAY: 'VNPay' }[m] || m)
+
+const orderStatusLabel = s => ({ pending: 'Đang xử lý', confirmed: 'Đã xác nhận', delivered: 'Đã giao', cancelled: 'Đã hủy' }[s] || s)
 </script>

@@ -63,5 +63,21 @@ export const profileApi = {
     })
     if (!res.ok) throw new Error('Không thể đặt địa chỉ mặc định')
     return res.json()
+  },
+
+  async getMyOrders() {
+    const res = await fetch(`${BASE_URL}/orders/my`, { headers: authHeader() })
+    if (!res.ok) throw new Error('Không thể tải đơn hàng')
+    return res.json()
+  },
+
+  async updatePaymentMethod(orderId, method) {
+    const res = await fetch(`${BASE_URL}/orders/${orderId}/payment`, {
+      method: 'PATCH',
+      headers: authHeader(),
+      body: JSON.stringify({ method })
+    })
+    if (!res.ok) throw new Error('Cập nhật thất bại')
+    return res.json()
   }
 }
