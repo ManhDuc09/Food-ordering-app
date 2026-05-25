@@ -3,11 +3,13 @@ package com.example.backend.service;
 import com.example.backend.dto.order.OrderDetailResponse;
 import com.example.backend.dto.order.OrderRequest;
 import com.example.backend.dto.order.OrderResponse;
+import com.example.backend.model.Branch;
 import com.example.backend.model.Order;
 import com.example.backend.model.OrderItem;
 import com.example.backend.model.Payment;
 import com.example.backend.model.Product;
 import com.example.backend.model.User;
+import com.example.backend.repository.BranchRepository;
 import com.example.backend.repository.OrderRepository;
 import com.example.backend.repository.PaymentRepository;
 import com.example.backend.repository.ProductRepository;
@@ -33,6 +35,7 @@ public class OrderService {
     private final PaymentRepository paymentRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
+    private final BranchRepository branchRepository;
 
     @Transactional
     public OrderResponse createOrder(OrderRequest request) {
@@ -50,6 +53,12 @@ public class OrderService {
         order.setDeliveryName(request.getFullName());
         order.setDeliveryPhone(request.getPhone());
         order.setDeliveryAddress(request.getAddress());
+
+        if (request.getBranchId() != null) {
+            Branch branch = branchRepository.findById(request.getBranchId())
+                    .orElseThrow(() -> new RuntimeException("Branch not found"));
+            order.setBranch(branch);
+        }
 
         Set<OrderItem> items = new HashSet<>();
         BigDecimal totalAmount = BigDecimal.ZERO;
@@ -133,6 +142,10 @@ public class OrderService {
         dto.setDeliveryName(order.getDeliveryName());
         dto.setDeliveryPhone(order.getDeliveryPhone());
         dto.setDeliveryAddress(order.getDeliveryAddress());
+        if (order.getBranch() != null) {
+            dto.setBranchName(order.getBranch().getName());
+            dto.setBranchAddress(order.getBranch().getAddress());
+        }
 
         if (payment != null) {
             dto.setPaymentId(payment.getId());

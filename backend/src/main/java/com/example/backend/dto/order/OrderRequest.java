@@ -14,6 +14,7 @@ public class OrderRequest {
     private String fullName;
     private String phone;
     private String address;
+    private UUID branchId;
 
     @Data
     public static class OrderItemRequest {

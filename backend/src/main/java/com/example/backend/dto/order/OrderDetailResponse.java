@@ -19,6 +19,8 @@ public class OrderDetailResponse {
     private String deliveryName;
     private String deliveryPhone;
     private String deliveryAddress;
+    private String branchName;
+    private String branchAddress;
     private String paymentMethod;
     private String paymentStatus;
     private UUID paymentId;

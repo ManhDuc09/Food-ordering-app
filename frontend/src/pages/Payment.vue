@@ -73,6 +73,20 @@
                 </label>
               </div>
 
+              <!-- Branch picker - Map -->
+              <div>
+                <p class="text-sm font-bold text-gray-700 mb-2">Chọn cửa hàng</p>
+                <div ref="branchMapEl" class="w-full h-64 rounded-2xl overflow-hidden border border-gray-200 mb-3"></div>
+                <div v-if="selectedBranch" class="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3">
+                  <span class="text-red-600 mt-0.5">📍</span>
+                  <div>
+                    <p class="text-sm font-semibold text-red-700">{{ selectedBranch.name }}</p>
+                    <p class="text-xs text-gray-500">{{ selectedBranch.address }}</p>
+                  </div>
+                </div>
+                <p v-else class="text-xs text-gray-400 text-center">Nhấn vào một địa điểm trên bản đồ để chọn cửa hàng</p>
+              </div>
+
               <div class="rounded-3xl border border-gray-200 bg-gray-50 p-5">
                 <p class="text-sm font-bold text-gray-700 mb-3">Phương thức thanh toán</p>
                 <div class="space-y-3">
@@ -142,15 +156,51 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted, nextTick } from 'vue'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
 import { cartState, clearCart } from '@/store/cart.js'
 import { orderApi } from '@/api/order.js'
+import { branchApi } from '@/api/branch.js'
 
 const form = ref({
   fullName: '',
   phone: '',
   address: '',
-  paymentMethod: 'COD'
+  paymentMethod: 'COD',
+  branchId: ''
+})
+
+const branchMapEl = ref(null)
+const selectedBranch = ref(null)
+
+onMounted(async () => {
+  let branches = []
+  try {
+    branches = await branchApi.getAllBranches()
+  } catch (e) {
+    console.error(e)
+  }
+
+  await nextTick()
+  if (!branchMapEl.value) return
+
+  const map = L.map(branchMapEl.value).setView([10.7626, 106.6602], 12)
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(map)
+
+  branches.forEach(branch => {
+    if (!branch.latitude || !branch.longitude) return
+    const marker = L.marker([branch.latitude, branch.longitude])
+      .addTo(map)
+      .bindPopup(`<b>${branch.name}</b><br><small>${branch.address || ''}</small>`)
+
+    marker.on('click', () => {
+      form.value.branchId = branch.branchId
+      selectedBranch.value = branch
+    })
+  })
 })
 const error = ref('')
 const submitted = ref(false)
@@ -176,6 +226,10 @@ const validateForm = () => {
     error.value = 'Vui lòng điền đầy đủ thông tin liên hệ và địa chỉ.'
     return false
   }
+  if (!form.value.branchId) {
+    error.value = 'Vui lòng chọn cửa hàng.'
+    return false
+  }
   return true
 }
 
@@ -195,6 +249,7 @@ const submitPayment = async () => {
       fullName: form.value.fullName,
       phone: form.value.phone,
       address: form.value.address,
+      branchId: form.value.branchId,
       totalAmount: totalPrice.value
     }
 
