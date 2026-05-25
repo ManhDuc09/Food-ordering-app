@@ -47,6 +47,9 @@ public class OrderService {
         Order order = new Order();
         order.setUser(user);
         order.setStatus("pending");
+        order.setDeliveryName(request.getFullName());
+        order.setDeliveryPhone(request.getPhone());
+        order.setDeliveryAddress(request.getAddress());
 
         Set<OrderItem> items = new HashSet<>();
         BigDecimal totalAmount = BigDecimal.ZERO;
@@ -127,6 +130,9 @@ public class OrderService {
         dto.setStatus(order.getStatus());
         dto.setTotalAmount(order.getTotalAmount());
         dto.setCreatedAt(order.getCreatedAt());
+        dto.setDeliveryName(order.getDeliveryName());
+        dto.setDeliveryPhone(order.getDeliveryPhone());
+        dto.setDeliveryAddress(order.getDeliveryAddress());
 
         if (payment != null) {
             dto.setPaymentId(payment.getId());

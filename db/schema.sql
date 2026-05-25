@@ -97,3 +97,8 @@ CREATE TABLE IF NOT EXISTS payments (
 
 ALTER TABLE order_items
 ADD COLUMN product_id UUID REFERENCES products(product_id);
+
+-- Add delivery info to orders
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_name VARCHAR(255);
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_phone VARCHAR(20);
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_address TEXT;

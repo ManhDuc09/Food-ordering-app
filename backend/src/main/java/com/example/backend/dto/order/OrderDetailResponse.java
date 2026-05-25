@@ -16,6 +16,9 @@ public class OrderDetailResponse {
     private String status;
     private BigDecimal totalAmount;
     private OffsetDateTime createdAt;
+    private String deliveryName;
+    private String deliveryPhone;
+    private String deliveryAddress;
     private String paymentMethod;
     private String paymentStatus;
     private UUID paymentId;

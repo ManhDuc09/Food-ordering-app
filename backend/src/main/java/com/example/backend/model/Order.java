@@ -34,6 +34,15 @@ public class Order {
     @Column(name = "total_amount", nullable = false)
     private BigDecimal totalAmount;
 
+    @Column(name = "delivery_name")
+    private String deliveryName;
+
+    @Column(name = "delivery_phone")
+    private String deliveryPhone;
+
+    @Column(name = "delivery_address")
+    private String deliveryAddress;
+
     @Column(name = "created_at", insertable = false, updatable = false)
     private OffsetDateTime createdAt;
 
