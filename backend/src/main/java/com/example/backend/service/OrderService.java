@@ -47,6 +47,10 @@ public class OrderService {
             throw new RuntimeException("Order must contain at least one item");
         }
 
+        if (request.getBranchId() == null) {
+            throw new RuntimeException("Branch is required");
+        }
+
         Order order = new Order();
         order.setUser(user);
         order.setStatus("pending");
@@ -88,8 +92,8 @@ public class OrderService {
         Payment payment = new Payment();
         payment.setOrder(savedOrder);
         payment.setMethod(request.getPaymentMethod() != null ? request.getPaymentMethod().toUpperCase() : "COD");
-        payment.setStatus("COD".equals(payment.getMethod()) ? "paid" : "pending");
-        payment.setPaidAt(LocalDateTime.now());
+        payment.setStatus("pending");
+        payment.setPaidAt(null);
         paymentRepository.save(payment);
 
         return new OrderResponse(savedOrder.getOrderId(), savedOrder.getStatus(), savedOrder.getTotalAmount());
