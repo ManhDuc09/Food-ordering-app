@@ -1,19 +1,19 @@
 import { reactive } from 'vue'
 
 export const authState = reactive({
-  isLoggedIn: !!localStorage.getItem('token'),
-  user: JSON.parse(localStorage.getItem('user') || 'null'),
+  isLoggedIn: !!sessionStorage.getItem('token'),
+  user: JSON.parse(sessionStorage.getItem('user') || 'null'),
   sessionExpired: false
 })
 
 export const syncAuth = () => {
-  authState.isLoggedIn = !!localStorage.getItem('token')
-  authState.user = JSON.parse(localStorage.getItem('user') || 'null')
+  authState.isLoggedIn = !!sessionStorage.getItem('token')
+  authState.user = JSON.parse(sessionStorage.getItem('user') || 'null')
 }
 
 export const logout = () => {
-  localStorage.removeItem('token')
-  localStorage.removeItem('user')
+  sessionStorage.removeItem('token')
+  sessionStorage.removeItem('user')
   authState.isLoggedIn = false
   authState.user = null
 }
@@ -28,7 +28,7 @@ function isTokenExpired(token) {
 }
 
 export const checkAndHandleExpiry = () => {
-  const token = localStorage.getItem('token')
+  const token = sessionStorage.getItem('token')
   if (token && isTokenExpired(token)) {
     logout()
     authState.sessionExpired = true

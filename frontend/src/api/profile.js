@@ -2,7 +2,7 @@ const BASE_URL = 'http://localhost:8080/api'
 
 const authHeader = () => ({
   'Content-Type': 'application/json',
-  Authorization: `Bearer ${localStorage.getItem('token')}`
+  Authorization: `Bearer ${sessionStorage.getItem('token')}`
 })
 
 export const profileApi = {

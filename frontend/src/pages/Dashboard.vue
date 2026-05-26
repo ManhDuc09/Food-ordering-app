@@ -231,7 +231,7 @@ import { logout } from '../store/auth'
 
 const router = useRouter()
 
-const user = JSON.parse(localStorage.getItem('user') || 'null')
+const user = JSON.parse(sessionStorage.getItem('user') || 'null')
 const userEmail = user?.email || ''
 const branchName = user?.branchName || ''
 

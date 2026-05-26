@@ -11,15 +11,16 @@ defineProps({
     </h2>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-      <div v-for="category in categories" :key="category.name"
-           class="bg-white rounded shadow hover:shadow-xl">
-        
+      <router-link v-for="category in categories" :key="category.name"
+           :to="'/menu#' + category.categoryId"
+           class="bg-white rounded shadow hover:shadow-xl block cursor-pointer">
+
         <img :src="category.image" class="h-40 w-full object-cover" />
-        
+
         <div class="p-4 font-bold">
           {{ category.name }}
         </div>
-      </div>
+      </router-link>
     </div>
   </main>
 </template>

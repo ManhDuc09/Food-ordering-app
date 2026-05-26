@@ -79,7 +79,7 @@ onMounted(() => {
       </div>
 
       <template v-else>
-        <section v-for="category in categories" :key="category.categoryId">
+        <section v-for="category in categories" :key="category.categoryId" :id="category.categoryId">
           <h2 class="text-2xl font-extrabold text-gray-800 mb-8 uppercase tracking-tight">
             {{ category.name }}
           </h2>

@@ -2,7 +2,7 @@ const BASE = 'http://localhost:8080/api/manager'
 
 const headers = () => ({
   'Content-Type': 'application/json',
-  Authorization: `Bearer ${localStorage.getItem('token')}`
+  Authorization: `Bearer ${sessionStorage.getItem('token')}`
 })
 
 export const managerApi = {

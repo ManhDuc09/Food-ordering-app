@@ -30,7 +30,12 @@ syncAuth()
 const router = createRouter({
   history: createWebHistory(),
   routes,
-  scrollBehavior() {
+  scrollBehavior(to) {
+    if (to.hash) {
+      return new Promise(resolve => {
+        setTimeout(() => resolve({ el: to.hash, behavior: 'smooth' }), 600)
+      })
+    }
     return { top: 0 }
   }
 })

@@ -2,7 +2,7 @@ const BASE_URL = 'http://localhost:8080/api'
 
 export const orderApi = {
   async createOrder(orderData) {
-    const token = localStorage.getItem('token')
+    const token = sessionStorage.getItem('token')
 
     const headers = {
       'Content-Type': 'application/json'

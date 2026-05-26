@@ -150,8 +150,8 @@ const handleRegister = async () => {
       phoneNumber: phone.value
     })
 
-    localStorage.setItem('token', data.token)
-    localStorage.setItem('user', JSON.stringify({ email: data.email, role: data.role }))
+    sessionStorage.setItem('token', data.token)
+    sessionStorage.setItem('user', JSON.stringify({ email: data.email, role: data.role }))
 
     router.push('/')
   } catch (err) {

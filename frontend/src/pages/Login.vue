@@ -94,7 +94,7 @@
 
         <p class="mt-8 text-center text-sm text-gray-600">
           Haven't got an account? 
-          <a href="#" class="font-bold underline text-black">Sign Up</a>
+          <router-link to="/register" class="font-bold underline text-black">Sign Up</router-link>
         </p>
       </div>
     </div>
@@ -128,8 +128,8 @@ const handleLogin = async () => {
     
     successMessage.value = "Đăng nhập thành công! Đang chuyển hướng..."
     
-    localStorage.setItem('token', data.token)
-    localStorage.setItem('user', JSON.stringify({ email: data.email, role: data.role, branchName: data.branchName }))
+    sessionStorage.setItem('token', data.token)
+    sessionStorage.setItem('user', JSON.stringify({ email: data.email, role: data.role, branchName: data.branchName }))
 
     syncAuth()
 
