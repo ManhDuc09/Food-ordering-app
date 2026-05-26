@@ -1,8 +1,10 @@
 <script setup>
 import { onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import MainLayout from './layouts/MainLayout.vue'
 import { authState, checkAndHandleExpiry } from './store/auth'
+
+const route = useRoute()
 
 const router = useRouter()
 
@@ -21,7 +23,8 @@ onUnmounted(() => clearInterval(expiryInterval))
 </script>
 
 <template>
-  <MainLayout />
+  <router-view v-if="route.meta.layout === 'dashboard'" />
+  <MainLayout v-else />
 
   <Transition name="fade">
     <div

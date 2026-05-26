@@ -30,7 +30,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
                 .requestMatchers("/api/auth/**").permitAll() 
                 .requestMatchers(HttpMethod.GET, "/api/branches/**", "/api/products/**").permitAll()
-                
+                .requestMatchers("/api/manager/**").hasRole("BRANCH_MANAGER")
                 .anyRequest().authenticated()
             )
             .sessionManagement(sess -> sess

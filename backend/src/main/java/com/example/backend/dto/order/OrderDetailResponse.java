@@ -24,6 +24,7 @@ public class OrderDetailResponse {
     private String paymentMethod;
     private String paymentStatus;
     private UUID paymentId;
+    private String customerEmail;
     private List<OrderItemDto> items;
 
     @Data

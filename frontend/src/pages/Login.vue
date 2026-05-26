@@ -129,13 +129,17 @@ const handleLogin = async () => {
     successMessage.value = "Đăng nhập thành công! Đang chuyển hướng..."
     
     localStorage.setItem('token', data.token)
-    localStorage.setItem('user', JSON.stringify({ email: data.email, role: data.role }))
-    
+    localStorage.setItem('user', JSON.stringify({ email: data.email, role: data.role, branchName: data.branchName }))
+
     syncAuth()
 
     setTimeout(() => {
-      const redirectPath = router.currentRoute.value.query.redirect || '/'
-      router.push(redirectPath)
+      if (data.role === 'branch_manager') {
+        router.push('/dashboard')
+      } else {
+        const redirectPath = router.currentRoute.value.query.redirect || '/'
+        router.push(redirectPath)
+      }
     }, 1500)
 
   } catch (err) {

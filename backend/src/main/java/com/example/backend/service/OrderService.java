@@ -151,6 +151,10 @@ public class OrderService {
             dto.setBranchAddress(order.getBranch().getAddress());
         }
 
+        if (order.getUser() != null) {
+            dto.setCustomerEmail(order.getUser().getEmail());
+        }
+
         if (payment != null) {
             dto.setPaymentId(payment.getId());
             dto.setPaymentMethod(payment.getMethod());

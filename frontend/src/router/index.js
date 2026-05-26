@@ -9,6 +9,7 @@ import Cart from '../pages/Cart.vue'
 import Register from '../pages/Register.vue'
 import Payment from '../pages/Payment.vue'
 import Profile from '../pages/Profile.vue'
+import Dashboard from '../pages/Dashboard.vue'
 import { authState, syncAuth, checkAndHandleExpiry } from '../store/auth'
 
 const routes = [
@@ -20,7 +21,8 @@ const routes = [
   { path: '/profile', component: Profile, meta: { requiresAuth: true } },
   { path: '/login', component: Login },
   { path: '/register', component: Register },
-  { path: '/map', component: Map }
+  { path: '/map', component: Map },
+  { path: '/dashboard', component: Dashboard, meta: { requiresAuth: true, role: 'branch_manager', layout: 'dashboard' } }
 ]
 
 syncAuth()
@@ -49,6 +51,10 @@ router.beforeEach((to, from, next) => {
 
   if (to.meta.requiresAuth && !authState.isLoggedIn) {
     return next({ path: '/login', query: { redirect: to.fullPath } })
+  }
+
+  if (to.meta.role && authState.user?.role !== to.meta.role) {
+    return next({ path: '/' })
   }
 
   next()

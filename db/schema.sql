@@ -102,3 +102,6 @@ ADD COLUMN product_id UUID REFERENCES products(product_id);
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_name VARCHAR(255);
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_phone VARCHAR(20);
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_address TEXT;
+
+-- Link managers to their branch
+ALTER TABLE users ADD COLUMN IF NOT EXISTS branch_id UUID REFERENCES branches(branch_id);
