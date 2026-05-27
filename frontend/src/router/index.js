@@ -10,6 +10,7 @@ import Register from '../pages/Register.vue'
 import Payment from '../pages/Payment.vue'
 import Profile from '../pages/Profile.vue'
 import Dashboard from '../pages/Dashboard.vue'
+import AdminDashboard from '../pages/AdminDashboard.vue'
 import { authState, syncAuth, checkAndHandleExpiry } from '../store/auth'
 
 const routes = [
@@ -22,7 +23,8 @@ const routes = [
   { path: '/login', component: Login },
   { path: '/register', component: Register },
   { path: '/map', component: Map },
-  { path: '/dashboard', component: Dashboard, meta: { requiresAuth: true, role: 'branch_manager', layout: 'dashboard' } }
+  { path: '/dashboard', component: Dashboard, meta: { requiresAuth: true, role: 'branch_manager', layout: 'dashboard' } },
+  { path: '/admin', component: AdminDashboard, meta: { requiresAuth: true, role: 'admin', layout: 'dashboard' } }
 ]
 
 syncAuth()

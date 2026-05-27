@@ -45,16 +45,14 @@
 <script setup>
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { authState, syncAuth } from '../store/auth' 
+import { authState, logout } from '../store/auth'
 import { cartState } from '../store/cart'
 
 const router = useRouter()
 const cartCount = computed(() => cartState.items.reduce((total, item) => total + item.quantity, 0))
 
 const handleLogout = () => {
-  localStorage.removeItem('token')
-  localStorage.removeItem('user')
-  syncAuth()
+  logout()
   router.push('/')
 }
 </script>

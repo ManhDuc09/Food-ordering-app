@@ -136,6 +136,8 @@ const handleLogin = async () => {
     setTimeout(() => {
       if (data.role === 'branch_manager') {
         router.push('/dashboard')
+      } else if (data.role === 'admin') {
+        router.push('/admin')
       } else {
         const redirectPath = router.currentRoute.value.query.redirect || '/'
         router.push(redirectPath)
