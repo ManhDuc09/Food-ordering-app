@@ -1,6 +1,5 @@
 package com.example.backend.controller;
 
-import com.example.backend.dto.branch.BranchRequest;
 import com.example.backend.dto.branch.BranchResponse;
 import com.example.backend.service.BranchService;
 import lombok.RequiredArgsConstructor;
@@ -16,11 +15,6 @@ import java.util.UUID;
 public class BranchController {
 
     private final BranchService branchService;
-
-    @PostMapping
-    public ResponseEntity<BranchResponse> createBranch(@RequestBody BranchRequest request) {
-        return ResponseEntity.ok(branchService.createBranch(request));
-    }
 
     @GetMapping
     public ResponseEntity<List<BranchResponse>> getAllBranches() {
