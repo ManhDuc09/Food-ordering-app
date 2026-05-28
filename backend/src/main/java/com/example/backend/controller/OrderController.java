@@ -35,4 +35,9 @@ public class OrderController {
             @RequestBody Map<String, String> body) {
         return ResponseEntity.ok(orderService.updatePaymentMethod(orderId, body.get("method")));
     }
+
+    @PatchMapping("/{orderId}/cancel")
+    public ResponseEntity<OrderDetailResponse> cancelOrder(@PathVariable UUID orderId) {
+        return ResponseEntity.ok(orderService.cancelOrder(orderId));
+    }
 }

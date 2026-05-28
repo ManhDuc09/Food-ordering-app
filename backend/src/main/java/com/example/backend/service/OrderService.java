@@ -137,6 +137,29 @@ public class OrderService {
         return toDetailResponse(order, payment);
     }
 
+    @Transactional
+    public OrderDetailResponse cancelOrder(UUID orderId) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(email).orElseThrow();
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        if (!order.getUser().getUserId().equals(user.getUserId())) {
+            throw new RuntimeException("Unauthorized");
+        }
+
+        if ("cancelled".equals(order.getStatus()) || "delivered".equals(order.getStatus())) {
+            throw new RuntimeException("Không thể hủy đơn hàng này");
+        }
+
+        order.setStatus("cancelled");
+        orderRepository.save(order);
+
+        Payment payment = paymentRepository.findByOrder(order).orElse(null);
+        return toDetailResponse(order, payment);
+    }
+
     private OrderDetailResponse toDetailResponse(Order order, Payment payment) {
         OrderDetailResponse dto = new OrderDetailResponse();
         dto.setOrderId(order.getOrderId());

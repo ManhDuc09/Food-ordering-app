@@ -126,8 +126,8 @@
                 </div>
               </div>
 
-              <div v-if="form.paymentMethod !== 'COD'" class="rounded-3xl border border-dashed border-yellow-400 bg-yellow-50 px-5 py-4 text-sm text-yellow-700">
-                Cổng thanh toán <strong>{{ form.paymentMethod }}</strong> đang được tích hợp. Đơn hàng sẽ được đặt và thanh toán xác nhận sau.
+              <div v-if="form.paymentMethod === 'MOMO'" class="rounded-3xl border border-dashed border-yellow-400 bg-yellow-50 px-5 py-4 text-sm text-yellow-700">
+                Cổng thanh toán <strong>MoMo</strong> đang được tích hợp. Đơn hàng sẽ được đặt và thanh toán xác nhận sau.
               </div>
 
               <div class="rounded-3xl border border-gray-200 bg-gray-50 p-6">
@@ -254,6 +254,20 @@ const submitPayment = async () => {
     }
 
     const result = await orderApi.createOrder(orderPayload)
+
+    if (form.value.paymentMethod === 'VNPAY') {
+      const token = sessionStorage.getItem('token')
+      const res = await fetch('http://localhost:8080/api/payment/vnpay/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ orderId: result.orderId })
+      })
+      if (!res.ok) throw new Error('Không thể tạo liên kết thanh toán VNPay')
+      const { paymentUrl } = await res.json()
+      clearCart()
+      window.location.href = paymentUrl
+      return
+    }
 
     submittedItems.value = cartItems.value.map((item) => ({ ...item }))
     submittedTotal.value = totalPrice.value

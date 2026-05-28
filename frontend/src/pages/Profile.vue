@@ -131,7 +131,7 @@
             </div>
             <div class="flex items-center gap-2 flex-wrap justify-end">
               <!-- Payment status badge -->
-              <span v-if="order.paymentStatus === 'pending'"
+              <span v-if="order.paymentStatus === 'pending' && order.paymentMethod !== 'COD'"
                 class="text-xs font-semibold px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700">
                 Chưa thanh toán
               </span>
@@ -160,6 +160,22 @@
             </li>
           </ul>
 
+          <!-- Delivery + Branch info -->
+          <div class="border-t border-gray-100 pt-3 space-y-1 text-xs text-gray-500">
+            <div v-if="order.deliveryName || order.deliveryPhone" class="flex items-center gap-1">
+              <span>👤</span>
+              <span>{{ order.deliveryName }}<span v-if="order.deliveryPhone"> · {{ order.deliveryPhone }}</span></span>
+            </div>
+            <div v-if="order.deliveryAddress" class="flex items-start gap-1">
+              <span class="shrink-0">📍</span>
+              <span>{{ order.deliveryAddress }}</span>
+            </div>
+            <div v-if="order.branchName" class="flex items-start gap-1">
+              <span class="shrink-0">🏪</span>
+              <span>{{ order.branchName }}<span v-if="order.branchAddress" class="text-gray-400"> · {{ order.branchAddress }}</span></span>
+            </div>
+          </div>
+
           <!-- Total + payment method -->
           <div class="border-t border-gray-100 pt-3 flex items-center justify-between">
             <span class="text-sm text-gray-500">
@@ -168,11 +184,28 @@
             <span class="font-bold text-base">{{ formatPrice(order.totalAmount) }}</span>
           </div>
 
-          <!-- Change method button (only for pending gateway payments) -->
-          <div v-if="order.paymentStatus === 'pending' && order.paymentMethod !== 'COD'">
+          <!-- Cancel button -->
+          <div v-if="order.status !== 'cancelled' && order.status !== 'delivered'">
+            <button @click="cancelOrder(order)"
+              :disabled="cancellingId === order.orderId"
+              class="w-full text-sm font-semibold text-gray-500 border border-gray-200 rounded-xl py-2 hover:bg-gray-50 disabled:opacity-50 transition-colors">
+              {{ cancellingId === order.orderId ? 'Đang hủy...' : 'Hủy đơn hàng' }}
+            </button>
+          </div>
+
+          <!-- Action buttons for pending non-COD orders -->
+          <div v-if="order.status !== 'cancelled' && order.paymentStatus === 'pending' && order.paymentMethod !== 'COD'"
+            class="flex gap-2">
+            <button
+              v-if="order.paymentMethod === 'VNPAY'"
+              @click="repay(order)"
+              :disabled="repayingId === order.orderId"
+              class="flex-1 text-sm font-semibold text-white bg-[#E4002B] rounded-xl py-2 hover:bg-red-700 disabled:opacity-50 transition-colors">
+              {{ repayingId === order.orderId ? 'Đang chuyển...' : 'Thanh toán lại' }}
+            </button>
             <button @click="openChangeMethod(order)"
-              class="w-full text-sm font-semibold text-red-600 border border-red-200 rounded-xl py-2 hover:bg-red-50 transition-colors">
-              Đổi phương thức thanh toán
+              class="flex-1 text-sm font-semibold text-red-600 border border-red-200 rounded-xl py-2 hover:bg-red-50 transition-colors">
+              Đổi phương thức
             </button>
           </div>
         </div>
@@ -272,6 +305,8 @@ const changingOrder = ref(null)
 const selectedMethod = ref('COD')
 const savingMethod = ref(false)
 const changeMethodError = ref('')
+const repayingId = ref(null)
+const cancellingId = ref(null)
 
 const paymentMethods = [
   { value: 'COD', icon: '🛵', label: 'Thanh toán khi nhận hàng', desc: 'Trả tiền mặt khi giao hàng' },
@@ -382,6 +417,40 @@ async function removeAddress(id) {
 async function makeDefault(id) {
   const updated = await profileApi.setDefaultAddress(id)
   addresses.value = addresses.value.map(a => ({ ...a, isDefault: a.id === updated.id }))
+}
+
+// --- Cancel order ---
+async function cancelOrder(order) {
+  if (!confirm('Bạn có chắc muốn hủy đơn hàng này?')) return
+  cancellingId.value = order.orderId
+  try {
+    const updated = await profileApi.cancelOrder(order.orderId)
+    const idx = orders.value.findIndex(o => o.orderId === updated.orderId)
+    if (idx !== -1) orders.value[idx] = updated
+  } catch (e) {
+    alert(e.message || 'Hủy đơn thất bại')
+  } finally {
+    cancellingId.value = null
+  }
+}
+
+// --- Repay via VNPay ---
+async function repay(order) {
+  repayingId.value = order.orderId
+  try {
+    const token = sessionStorage.getItem('token')
+    const res = await fetch('http://localhost:8080/api/payment/vnpay/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ orderId: order.orderId })
+    })
+    if (!res.ok) throw new Error()
+    const { paymentUrl } = await res.json()
+    window.location.href = paymentUrl
+  } catch {
+    alert('Không thể tạo liên kết thanh toán. Vui lòng thử lại.')
+    repayingId.value = null
+  }
 }
 
 // --- Change payment method ---

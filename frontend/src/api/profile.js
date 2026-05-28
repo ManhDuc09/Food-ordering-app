@@ -79,5 +79,17 @@ export const profileApi = {
     })
     if (!res.ok) throw new Error('Cập nhật thất bại')
     return res.json()
+  },
+
+  async cancelOrder(orderId) {
+    const res = await fetch(`${BASE_URL}/orders/${orderId}/cancel`, {
+      method: 'PATCH',
+      headers: authHeader()
+    })
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      throw new Error(err.error || 'Hủy đơn thất bại')
+    }
+    return res.json()
   }
 }

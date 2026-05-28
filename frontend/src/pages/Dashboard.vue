@@ -183,7 +183,8 @@
                 <div>
                   <p class="text-xs text-gray-400 uppercase font-bold mb-1">Payment</p>
                   <p class="font-bold text-gray-800">{{ order.paymentMethod }}</p>
-                  <span :class="['text-xs font-bold uppercase', order.paymentStatus === 'paid' ? 'text-green-600' : 'text-yellow-600']">
+                  <span v-if="order.paymentMethod !== 'COD' || order.paymentStatus === 'paid'"
+                    :class="['text-xs font-bold uppercase', order.paymentStatus === 'paid' ? 'text-green-600' : 'text-yellow-600']">
                     {{ order.paymentStatus }}
                   </span>
                 </div>
