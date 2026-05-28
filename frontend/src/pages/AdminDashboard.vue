@@ -278,8 +278,28 @@
             <textarea v-model="productModal.form.description" rows="2" class="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-[#E4002B]"></textarea>
           </div>
           <div>
-            <label class="text-xs font-black text-gray-500 uppercase">Image URL</label>
-            <input v-model="productModal.form.imageUrl" class="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-[#E4002B]" />
+            <label class="text-xs font-black text-gray-500 uppercase">Image</label>
+            <div class="mt-1 flex gap-2">
+              <input
+                v-model="productModal.form.imageUrl"
+                placeholder="Paste URL or upload a file"
+                class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#E4002B]"
+              />
+              <label class="cursor-pointer flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-700 font-bold text-xs px-3 py-2 rounded-lg transition-colors">
+                <svg v-if="!imageUploading" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+                <svg v-else class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                </svg>
+                {{ imageUploading ? 'Uploading...' : 'Upload' }}
+                <input type="file" accept="image/*" class="hidden" @change="uploadImage" :disabled="imageUploading" />
+              </label>
+            </div>
+            <div v-if="productModal.form.imageUrl" class="mt-2">
+              <img :src="productModal.form.imageUrl" class="h-24 w-24 object-cover rounded-lg border border-gray-200" @error="e => e.target.style.display='none'" />
+            </div>
           </div>
           <div>
             <label class="text-xs font-black text-gray-500 uppercase">Price (VND)</label>
@@ -389,6 +409,10 @@ const today = new Date().toLocaleDateString('vi-VN', { weekday: 'long', year: 'n
 
 const activeTab = ref('overview')
 const loading = ref(false)
+const imageUploading = ref(false)
+
+const CLOUDINARY_CLOUD = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
+const CLOUDINARY_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
 
 const users = ref([])
 const products = ref([])
@@ -598,6 +622,31 @@ const executeDelete = async () => {
     deleteModal.open = false
   } catch (e) {
     alert(e.message)
+  }
+}
+
+// ── Image Upload ──────────────────────────────────────────
+
+const uploadImage = async (e) => {
+  const file = e.target.files[0]
+  if (!file) return
+  imageUploading.value = true
+  try {
+    const form = new FormData()
+    form.append('file', file)
+    form.append('upload_preset', CLOUDINARY_PRESET)
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, {
+      method: 'POST',
+      body: form
+    })
+    if (!res.ok) throw new Error('Upload failed')
+    const data = await res.json()
+    productModal.form.imageUrl = data.secure_url
+  } catch (e) {
+    alert('Image upload failed: ' + e.message)
+  } finally {
+    imageUploading.value = false
+    e.target.value = ''
   }
 }
 
