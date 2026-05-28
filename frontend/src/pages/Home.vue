@@ -15,7 +15,7 @@ onMounted(async () => {
 <template>
   <Hero />
 
-  <div v-if="isLoading" class="text-center p-10">Loading yummy food...</div>
+  <div v-if="isLoading" class="text-center p-10">Đang tải...</div>
   
   <CategoryGrid v-else :categories="categories" />
 </template>

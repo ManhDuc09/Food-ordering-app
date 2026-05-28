@@ -9,7 +9,7 @@
           </div>
           <div>
             <p class="text-white font-black text-lg leading-none">KFC</p>
-            <p class="text-red-200 text-xs">Manager Portal</p>
+            <p class="text-red-200 text-xs">Cổng Quản Lý</p>
           </div>
         </div>
       </div>
@@ -23,7 +23,7 @@
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
           </svg>
-          Orders
+          Đơn hàng
         </button>
 
         <button
@@ -34,14 +34,14 @@
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
           </svg>
-          Stats
+          Thống kê
         </button>
       </nav>
 
       <div class="p-4 border-t border-red-700">
         <div class="mb-3 px-2">
           <p class="text-white font-bold text-sm truncate">{{ userEmail }}</p>
-          <p class="text-red-200 text-xs">{{ branchName || 'Branch Manager' }}</p>
+          <p class="text-red-200 text-xs">{{ branchName || 'Quản lý chi nhánh' }}</p>
         </div>
         <button
           @click="handleLogout"
@@ -50,7 +50,7 @@
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
           </svg>
-          Logout
+          Đăng xuất
         </button>
       </div>
     </aside>
@@ -61,7 +61,7 @@
       <header class="bg-white shadow-sm px-8 py-4 flex items-center justify-between">
         <div>
           <h1 class="text-2xl font-black text-gray-900 uppercase">
-            {{ activeTab === 'orders' ? 'Orders' : 'Stats' }}
+            {{ activeTab === 'orders' ? 'Đơn hàng' : 'Thống kê' }}
           </h1>
           <p class="text-sm text-gray-500">{{ branchName }}</p>
         </div>
@@ -74,7 +74,7 @@
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
-            Refresh
+            Làm mới
           </button>
         </div>
       </header>
@@ -84,27 +84,27 @@
         <div v-if="activeTab === 'stats'" class="space-y-6">
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <div class="bg-white rounded-xl p-6 shadow-sm border-l-4 border-[#E4002B]">
-              <p class="text-sm text-gray-500 font-bold uppercase">Total Orders</p>
+              <p class="text-sm text-gray-500 font-bold uppercase">Tổng đơn hàng</p>
               <p class="text-3xl font-black text-gray-900 mt-1">{{ orders.length }}</p>
             </div>
             <div class="bg-white rounded-xl p-6 shadow-sm border-l-4 border-yellow-400">
-              <p class="text-sm text-gray-500 font-bold uppercase">Pending</p>
+              <p class="text-sm text-gray-500 font-bold uppercase">Chờ xử lý</p>
               <p class="text-3xl font-black text-gray-900 mt-1">{{ countByStatus('pending') }}</p>
             </div>
             <div class="bg-white rounded-xl p-6 shadow-sm border-l-4 border-blue-500">
-              <p class="text-sm text-gray-500 font-bold uppercase">Preparing</p>
+              <p class="text-sm text-gray-500 font-bold uppercase">Đang chuẩn bị</p>
               <p class="text-3xl font-black text-gray-900 mt-1">{{ countByStatus('preparing') }}</p>
             </div>
             <div class="bg-white rounded-xl p-6 shadow-sm border-l-4 border-green-500">
-              <p class="text-sm text-gray-500 font-bold uppercase">Delivered</p>
+              <p class="text-sm text-gray-500 font-bold uppercase">Đã giao</p>
               <p class="text-3xl font-black text-gray-900 mt-1">{{ countByStatus('delivered') }}</p>
             </div>
           </div>
 
           <div class="bg-white rounded-xl p-6 shadow-sm">
-            <h2 class="font-black text-lg uppercase mb-4">Revenue</h2>
+            <h2 class="font-black text-lg uppercase mb-4">Doanh thu</h2>
             <p class="text-4xl font-black text-[#E4002B]">{{ formatCurrency(totalRevenue) }}</p>
-            <p class="text-sm text-gray-400 mt-1">from {{ orders.length }} orders</p>
+            <p class="text-sm text-gray-400 mt-1">từ {{ orders.length }} đơn hàng</p>
           </div>
         </div>
 
@@ -142,7 +142,7 @@
           <!-- Empty -->
           <div v-else-if="filteredOrders.length === 0" class="bg-white rounded-xl p-16 text-center shadow-sm">
             <p class="text-5xl mb-4">🍗</p>
-            <p class="font-bold text-gray-400">No orders found</p>
+            <p class="font-bold text-gray-400">Không có đơn hàng</p>
           </div>
 
           <!-- Order cards -->
@@ -162,7 +162,7 @@
                     <p class="text-xs text-gray-400">{{ formatDate(order.createdAt) }}</p>
                   </div>
                   <span :class="['px-3 py-1 rounded-full text-xs font-black uppercase', statusClass(order.status)]">
-                    {{ order.status }}
+                    {{ statusLabel(order.status) }}
                   </span>
                 </div>
                 <p class="font-black text-[#E4002B] text-lg">{{ formatCurrency(order.totalAmount) }}</p>
@@ -171,28 +171,28 @@
               <!-- Order body -->
               <div class="px-6 py-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                 <div>
-                  <p class="text-xs text-gray-400 uppercase font-bold mb-1">Customer</p>
+                  <p class="text-xs text-gray-400 uppercase font-bold mb-1">Khách hàng</p>
                   <p class="font-bold text-gray-800">{{ order.deliveryName }}</p>
                   <p class="text-gray-500">{{ order.customerEmail }}</p>
                   <p class="text-gray-500">{{ order.deliveryPhone }}</p>
                 </div>
                 <div>
-                  <p class="text-xs text-gray-400 uppercase font-bold mb-1">Delivery Address</p>
+                  <p class="text-xs text-gray-400 uppercase font-bold mb-1">Địa chỉ giao hàng</p>
                   <p class="text-gray-700">{{ order.deliveryAddress || '—' }}</p>
                 </div>
                 <div>
-                  <p class="text-xs text-gray-400 uppercase font-bold mb-1">Payment</p>
+                  <p class="text-xs text-gray-400 uppercase font-bold mb-1">Thanh toán</p>
                   <p class="font-bold text-gray-800">{{ order.paymentMethod }}</p>
                   <span v-if="order.paymentMethod !== 'COD' || order.paymentStatus === 'paid'"
-                    :class="['text-xs font-bold uppercase', order.paymentStatus === 'paid' ? 'text-green-600' : 'text-yellow-600']">
-                    {{ order.paymentStatus }}
+                    :class="['text-xs font-bold', order.paymentStatus === 'paid' ? 'text-green-600' : 'text-yellow-600']">
+                    {{ order.paymentStatus === 'paid' ? 'Đã thanh toán' : 'Chưa thanh toán' }}
                   </span>
                 </div>
               </div>
 
               <!-- Items -->
               <div class="px-6 pb-3">
-                <p class="text-xs text-gray-400 uppercase font-bold mb-2">Items</p>
+                <p class="text-xs text-gray-400 uppercase font-bold mb-2">Sản phẩm</p>
                 <div class="flex flex-wrap gap-2">
                   <span
                     v-for="item in order.items"
@@ -246,12 +246,12 @@ const updatingId = ref(null)
 const today = new Date().toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
 
 const filters = [
-  { label: 'All', value: 'all' },
-  { label: 'Pending', value: 'pending' },
-  { label: 'Preparing', value: 'preparing' },
-  { label: 'Delivering', value: 'delivering' },
-  { label: 'Delivered', value: 'delivered' },
-  { label: 'Cancelled', value: 'cancelled' },
+  { label: 'Tất cả', value: 'all' },
+  { label: 'Chờ xử lý', value: 'pending' },
+  { label: 'Đang chuẩn bị', value: 'preparing' },
+  { label: 'Đang giao', value: 'delivering' },
+  { label: 'Đã giao', value: 'delivered' },
+  { label: 'Đã hủy', value: 'cancelled' },
 ]
 
 const filteredOrders = computed(() =>
@@ -298,15 +298,23 @@ const handleLogout = () => {
 
 const statusActions = (status) => {
   const map = {
-    pending:    [{ label: 'Start Preparing', status: 'preparing', class: 'bg-blue-600 text-white hover:bg-blue-700' },
-                 { label: 'Cancel', status: 'cancelled', class: 'bg-gray-200 text-gray-700 hover:bg-gray-300' }],
-    preparing:  [{ label: 'Out for Delivery', status: 'delivering', class: 'bg-yellow-500 text-white hover:bg-yellow-600' }],
-    delivering: [{ label: 'Mark Delivered', status: 'delivered', class: 'bg-green-600 text-white hover:bg-green-700' }],
+    pending:    [{ label: 'Bắt đầu chuẩn bị', status: 'preparing', class: 'bg-blue-600 text-white hover:bg-blue-700' },
+                 { label: 'Hủy đơn', status: 'cancelled', class: 'bg-gray-200 text-gray-700 hover:bg-gray-300' }],
+    preparing:  [{ label: 'Đang giao hàng', status: 'delivering', class: 'bg-yellow-500 text-white hover:bg-yellow-600' }],
+    delivering: [{ label: 'Xác nhận đã giao', status: 'delivered', class: 'bg-green-600 text-white hover:bg-green-700' }],
     delivered:  [],
     cancelled:  [],
   }
   return map[status] || []
 }
+
+const statusLabel = (status) => ({
+  pending: 'Chờ xử lý',
+  preparing: 'Đang chuẩn bị',
+  delivering: 'Đang giao',
+  delivered: 'Đã giao',
+  cancelled: 'Đã hủy',
+}[status] || status)
 
 const statusClass = (status) => {
   const map = {

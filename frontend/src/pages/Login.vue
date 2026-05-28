@@ -37,7 +37,7 @@
              {{ successMessage }}
            </div>
         </div>
-        <h2 class="text-3xl font-black uppercase mb-8 italic">LOGIN</h2>
+        <h2 class="text-3xl font-black uppercase mb-8 italic">ĐĂNG NHẬP</h2>
 
         <form @submit.prevent="handleLogin" class="space-y-6">
           <div class="relative border-b border-gray-300">
@@ -50,7 +50,7 @@
           </div>
 
           <div class="relative border-b border-gray-300">
-            <label class="text-xs text-gray-500 uppercase font-bold">Password *</label>
+            <label class="text-xs text-gray-500 uppercase font-bold">Mật khẩu *</label>
             <div class="flex items-center">
               <input
                     v-model="password"
@@ -66,35 +66,35 @@
           </div>
 
           <div class="text-right">
-            <a href="#" class="text-xs font-bold underline">Forgot Your Password?</a>
+            <a href="#" class="text-xs font-bold underline">Quên mật khẩu?</a>
           </div>
 
           <button class="w-full bg-[#28a745] hover:bg-[#218838] text-white font-bold py-3 rounded-full shadow-lg transition-all" type="submit">
-            Login
+            Đăng nhập
           </button>
         </form>
 
         <div class="mt-8">
           <div class="relative flex py-5 items-center">
               <div class="flex-grow border-t border-gray-200"></div>
-              <span class="flex-shrink mx-4 text-gray-500 text-sm font-bold">Or continue with</span>
+              <span class="flex-shrink mx-4 text-gray-500 text-sm font-bold">Hoặc đăng nhập với</span>
               <div class="flex-grow border-t border-gray-200"></div>
           </div>
 
           <div class="space-y-3">
             <button class="w-full bg-black text-white flex items-center justify-center py-3 rounded-full font-bold hover:opacity-90">
-              <span class="mr-2"></span> Sign in with Apple
+              <span class="mr-2"></span> Đăng nhập với Apple
             </button>
             <button class="w-full bg-[#DB4437] text-white flex items-center justify-center py-3 rounded-full font-bold hover:opacity-90">
               <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" class="w-5 h-5 mr-2 bg-white rounded-full p-0.5" /> 
-              Sign in with Google
+              Đăng nhập với Google
             </button>
           </div>
         </div>
 
         <p class="mt-8 text-center text-sm text-gray-600">
-          Haven't got an account? 
-          <router-link to="/register" class="font-bold underline text-black">Sign Up</router-link>
+          Chưa có tài khoản?
+          <router-link to="/register" class="font-bold underline text-black">Đăng ký</router-link>
         </p>
       </div>
     </div>

@@ -75,7 +75,7 @@ onMounted(() => {
   <div class="bg-gray-50 min-h-screen py-10 px-4 md:px-8">
     <div class="max-w-7xl mx-auto space-y-16">
       <div v-if="isLoading" class="text-center p-10 text-gray-500">
-        Loading products and categories...
+        Đang tải sản phẩm...
       </div>
 
       <template v-else>
@@ -94,10 +94,10 @@ onMounted(() => {
 
           <div v-else class="rounded-3xl border border-dashed border-gray-300 bg-white p-10 text-center text-gray-500">
             <p class="text-lg font-semibold text-gray-700 mb-2">
-              New products for this category are coming soon.
+              Sản phẩm mới cho danh mục này sắp ra mắt.
             </p>
             <p class="text-sm">
-              Check back later for awesome items in {{ category.name }}.
+              Hãy quay lại sau để xem các món trong {{ category.name }}.
             </p>
           </div>
         </section>

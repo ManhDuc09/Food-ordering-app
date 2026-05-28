@@ -40,7 +40,7 @@
         </div>
 
         <div class="col-span-2 lg:col-span-1">
-          <h3 class="font-bold text-lg mb-4">Download App</h3>
+          <h3 class="font-bold text-lg mb-4">Tải ứng dụng</h3>
           <div class="flex flex-col gap-3">
             <a href="#"><img src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Download_on_the_App_Store_Badge.svg" alt="App Store" class="w-32"></a>
             <a href="#"><img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" alt="Google Play" class="w-32"></a>
