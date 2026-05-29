@@ -257,7 +257,7 @@ const submitPayment = async () => {
 
     if (form.value.paymentMethod === 'VNPAY') {
       const token = sessionStorage.getItem('token')
-      const res = await fetch('http://localhost:8080/api/payment/vnpay/create', {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/payment/vnpay/create`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ orderId: result.orderId })

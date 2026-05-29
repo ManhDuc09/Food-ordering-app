@@ -80,7 +80,7 @@ onMounted(async () => {
   const params = Object.fromEntries(new URLSearchParams(window.location.search))
   try {
     const query = new URLSearchParams(params).toString()
-    const res = await fetch(`http://localhost:8080/api/payment/vnpay/verify?${query}`)
+    const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/payment/vnpay/verify?${query}`)
     result.value = await res.json()
   } catch (e) {
     result.value = { success: false, responseCode: '', orderId: '' }
