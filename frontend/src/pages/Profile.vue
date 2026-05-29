@@ -276,6 +276,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { profileApi } from '../api/profile'
+import { showToast } from '../store/toast'
 
 const tabs = [
   { key: 'info', label: 'Thông tin cá nhân' },
@@ -361,8 +362,10 @@ async function saveProfile() {
   try {
     profile.value = await profileApi.updateProfile(profileForm.value)
     editingProfile.value = false
+    showToast('Cập nhật thông tin thành công!')
   } catch {
     profileError.value = 'Cập nhật thất bại, thử lại sau'
+    showToast('Cập nhật thất bại, thử lại sau', 'error')
   } finally {
     savingProfile.value = false
   }
@@ -398,8 +401,10 @@ async function saveAddress() {
       addresses.value.push(await profileApi.addAddress(addressForm.value))
     }
     showAddressModal.value = false
+    showToast(editingAddress.value ? 'Cập nhật địa chỉ thành công!' : 'Thêm địa chỉ thành công!')
   } catch {
     addressError.value = 'Lưu địa chỉ thất bại, thử lại sau'
+    showToast('Lưu địa chỉ thất bại, thử lại sau', 'error')
   } finally {
     savingAddress.value = false
   }
@@ -409,8 +414,9 @@ async function removeAddress(id) {
   try {
     await profileApi.deleteAddress(id)
     addresses.value = addresses.value.filter(a => a.id !== id)
+    showToast('Đã xóa địa chỉ.')
   } catch {
-    alert('Xóa địa chỉ thất bại')
+    showToast('Xóa địa chỉ thất bại', 'error')
   }
 }
 
@@ -427,8 +433,9 @@ async function cancelOrder(order) {
     const updated = await profileApi.cancelOrder(order.orderId)
     const idx = orders.value.findIndex(o => o.orderId === updated.orderId)
     if (idx !== -1) orders.value[idx] = updated
+    showToast('Đã hủy đơn hàng.')
   } catch (e) {
-    alert(e.message || 'Hủy đơn thất bại')
+    showToast(e.message || 'Hủy đơn thất bại', 'error')
   } finally {
     cancellingId.value = null
   }
@@ -471,8 +478,10 @@ async function saveNewMethod() {
     const idx = orders.value.findIndex(o => o.orderId === updated.orderId)
     if (idx !== -1) orders.value[idx] = updated
     showChangeMethodModal.value = false
+    showToast('Đã cập nhật phương thức thanh toán!')
   } catch {
     changeMethodError.value = 'Cập nhật thất bại, thử lại sau'
+    showToast('Cập nhật thất bại, thử lại sau', 'error')
   } finally {
     savingMethod.value = false
   }

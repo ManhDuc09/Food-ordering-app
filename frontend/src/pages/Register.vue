@@ -23,11 +23,6 @@
       <div class="w-full md:w-1/2 flex flex-col justify-center px-8 py-12 lg:px-24 bg-white">
         <h2 class="text-3xl font-black uppercase mb-8">TẠO TÀI KHOẢN</h2>
 
-        <!-- Error message -->
-        <div v-if="error" class="mb-4 p-3 bg-red-100 text-red-700 rounded text-sm">
-          {{ error }}
-        </div>
-
         <form @submit.prevent="handleRegister" class="space-y-6">
 
           <div class="relative border-b border-gray-300">
@@ -126,6 +121,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { authApi } from '../api/auth'
+import { showToast } from '../store/toast'
 const router = useRouter()
 
 const firstName = ref('')
@@ -136,12 +132,9 @@ const password = ref('')
 const showPassword = ref(false)
 const agreed = ref(false)
 const loading = ref(false)
-const error = ref('')
 
 const handleRegister = async () => {
-  error.value = ''
   loading.value = true
-
   try {
     const data = await authApi.register({
       email: email.value,
@@ -153,9 +146,10 @@ const handleRegister = async () => {
     sessionStorage.setItem('token', data.token)
     sessionStorage.setItem('user', JSON.stringify({ email: data.email, role: data.role }))
 
+    showToast('Đăng ký thành công! Chào mừng bạn!')
     router.push('/')
   } catch (err) {
-    error.value = err.message
+    showToast(err.message || 'Đăng ký thất bại, vui lòng thử lại.', 'error')
   } finally {
     loading.value = false
   }

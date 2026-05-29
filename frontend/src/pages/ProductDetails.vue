@@ -3,13 +3,13 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { fetchProduct } from '@/api/product.js'
 import { addToCart } from '@/store/cart.js'
+import { showToast } from '@/store/toast.js'
 
 const route = useRoute()
 const product = ref(null)
 const quantity = ref(1)
 const isLoading = ref(true)
 const error = ref('')
-const successMessage = ref('')
 
 const increment = () => quantity.value++
 const decrement = () => {
@@ -17,20 +17,13 @@ const decrement = () => {
 }
 
 const addProductToCart = () => {
-  if (!product.value) {
-    return
-  }
-
+  if (!product.value) return
   const added = addToCart(product.value, quantity.value)
   if (added) {
-    successMessage.value = 'Đã thêm sản phẩm vào giỏ hàng.'
+    showToast(`Đã thêm ${quantity.value} ${product.value.name} vào giỏ hàng!`)
   } else {
-    successMessage.value = 'Không thể thêm sản phẩm vào giỏ hàng.'
+    showToast('Không thể thêm sản phẩm vào giỏ hàng.', 'error')
   }
-
-  setTimeout(() => {
-    successMessage.value = ''
-  }, 2500)
 }
 
 const formatPrice = (value) => {
@@ -122,9 +115,6 @@ onMounted(loadProduct)
               <button @click="addProductToCart" class="bg-red-600 text-white font-bold py-3 px-8 rounded-full shadow-lg shadow-red-200 hover:bg-red-700 transition-all active:scale-95 flex-grow ml-6">
                 Thêm vào giỏ ({{ formatPrice(price * quantity) }})
               </button>
-            </div>
-            <div v-if="successMessage" class="mt-4 text-sm text-green-600 font-medium">
-              {{ successMessage }}
             </div>
           </div>
         </div>

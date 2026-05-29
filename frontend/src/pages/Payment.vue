@@ -162,6 +162,7 @@ import 'leaflet/dist/leaflet.css'
 import { cartState, clearCart } from '@/store/cart.js'
 import { orderApi } from '@/api/order.js'
 import { branchApi } from '@/api/branch.js'
+import { showToast } from '@/store/toast.js'
 
 const form = ref({
   fullName: '',
@@ -274,8 +275,11 @@ const submitPayment = async () => {
     confirmationCode.value = result.orderId || buildConfirmationCode()
     clearCart()
     submitted.value = true
+    showToast('Đặt hàng thành công!')
   } catch (err) {
-    error.value = err.message || 'Không thể tạo đơn hàng. Vui lòng thử lại.'
+    const msg = err.message || 'Không thể tạo đơn hàng. Vui lòng thử lại.'
+    error.value = msg
+    showToast(msg, 'error')
   }
 }
 </script>
