@@ -356,7 +356,12 @@ function startEditProfile() {
 function cancelEditProfile() { editingProfile.value = false }
 
 async function saveProfile() {
-  if (!profileForm.value.fullName.trim()) { profileError.value = 'Vui lòng nhập họ và tên'; return }
+  if (!profileForm.value.fullName.trim()) {
+    showToast('Vui lòng nhập họ và tên.', 'error'); return
+  }
+  if (profileForm.value.phoneNumber && !/^0[3-9]\d{8}$/.test(profileForm.value.phoneNumber.replace(/[\s-]/g, ''))) {
+    showToast('Số điện thoại không hợp lệ (VD: 0912 345 678).', 'error'); return
+  }
   savingProfile.value = true
   profileError.value = ''
   try {
@@ -389,7 +394,9 @@ function openEditAddress(addr) {
 function closeAddressModal() { showAddressModal.value = false }
 
 async function saveAddress() {
-  if (!addressForm.value.street.trim()) { addressError.value = 'Vui lòng nhập địa chỉ'; return }
+  if (!addressForm.value.street.trim()) {
+    showToast('Vui lòng nhập địa chỉ.', 'error'); return
+  }
   savingAddress.value = true
   addressError.value = ''
   try {

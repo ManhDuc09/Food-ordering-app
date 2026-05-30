@@ -133,7 +133,27 @@ const showPassword = ref(false)
 const agreed = ref(false)
 const loading = ref(false)
 
+const validate = () => {
+  if (!firstName.value.trim() || !lastName.value.trim()) {
+    showToast('Vui lòng nhập đầy đủ họ và tên.', 'error'); return false
+  }
+  if (!email.value.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim())) {
+    showToast('Email không hợp lệ.', 'error'); return false
+  }
+  if (phone.value && !/^0[3-9]\d{8}$/.test(phone.value.replace(/[\s-]/g, ''))) {
+    showToast('Số điện thoại không hợp lệ (VD: 0912 345 678).', 'error'); return false
+  }
+  if (password.value.length < 6) {
+    showToast('Mật khẩu phải có ít nhất 6 ký tự.', 'error'); return false
+  }
+  if (!agreed.value) {
+    showToast('Vui lòng đồng ý với điều khoản sử dụng.', 'error'); return false
+  }
+  return true
+}
+
 const handleRegister = async () => {
+  if (!validate()) return
   loading.value = true
   try {
     const data = await authApi.register({

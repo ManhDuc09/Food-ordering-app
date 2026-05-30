@@ -232,12 +232,9 @@
                 </div>
               </div>
 
-              <div class="space-y-3">
-                <p v-if="error" class="text-sm text-red-700 font-semibold">{{ error }}</p>
-                <button type="submit" class="w-full bg-red-600 text-white py-3 rounded-full font-bold hover:bg-red-700 transition-all">
-                  Xác nhận thanh toán
-                </button>
-              </div>
+              <button type="submit" class="w-full bg-red-600 text-white py-3 rounded-full font-bold hover:bg-red-700 transition-all">
+                Xác nhận thanh toán
+              </button>
             </form>
           </div>
         </div>
@@ -339,7 +336,6 @@ onMounted(async () => {
   })
 })
 
-const error = ref('')
 const submitted = ref(false)
 const confirmationCode = ref('')
 const submittedItems = ref([])
@@ -376,16 +372,22 @@ const validateForm = () => {
   touchField('fullName')
   touchField('phone')
   touchField('address')
-  if (fieldErrors.value.fullName || fieldErrors.value.phone || fieldErrors.value.address) return false
-  if (!form.value.branchId) {
-    error.value = 'Vui lòng chọn cửa hàng trên bản đồ.'
+
+  const errors = [
+    fieldErrors.value.fullName,
+    fieldErrors.value.phone,
+    fieldErrors.value.address,
+    !form.value.branchId ? 'Vui lòng chọn cửa hàng.' : ''
+  ].filter(Boolean)
+
+  if (errors.length > 0) {
+    errors.forEach(msg => showToast(msg, 'error', 4000))
     return false
   }
   return true
 }
 
 const submitPayment = async () => {
-  error.value = ''
   if (!validateForm()) {
     return
   }
@@ -427,9 +429,7 @@ const submitPayment = async () => {
     submitted.value = true
     showToast('Đặt hàng thành công!')
   } catch (err) {
-    const msg = err.message || 'Không thể tạo đơn hàng. Vui lòng thử lại.'
-    error.value = msg
-    showToast(msg, 'error')
+    showToast(err.message || 'Không thể tạo đơn hàng. Vui lòng thử lại.', 'error')
   }
 }
 </script>

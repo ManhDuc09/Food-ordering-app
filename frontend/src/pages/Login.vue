@@ -99,6 +99,12 @@ const showPassword = ref(false)
 const loading = ref(false)
 
 const handleLogin = async () => {
+  if (!email.value.trim()) {
+    showToast('Vui lòng nhập email.', 'error'); return
+  }
+  if (!password.value) {
+    showToast('Vui lòng nhập mật khẩu.', 'error'); return
+  }
   loading.value = true
   try {
     const data = await authApi.login(email.value, password.value)

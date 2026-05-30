@@ -539,6 +539,12 @@ const openProductModal = (p) => {
 }
 
 const submitProduct = async () => {
+  if (!productModal.form.name.trim()) {
+    showToast('Vui lòng nhập tên sản phẩm.', 'error'); return
+  }
+  if (!productModal.form.price || productModal.form.price <= 0) {
+    showToast('Giá sản phẩm phải lớn hơn 0.', 'error'); return
+  }
   try {
     const payload = { ...productModal.form }
     if (productModal.mode === 'create') {
@@ -559,7 +565,9 @@ const submitProduct = async () => {
 
 const createCategory = async () => {
   const name = newCategoryName.value.trim()
-  if (!name) return
+  if (name.length < 2) {
+    showToast('Tên danh mục phải có ít nhất 2 ký tự.', 'error'); return
+  }
   try {
     const created = await adminApi.createCategory(name)
     categories.value.push(created)
@@ -591,6 +599,20 @@ const openBranchModal = (b) => {
 }
 
 const submitBranch = async () => {
+  if (!branchModal.form.name.trim()) {
+    showToast('Vui lòng nhập tên chi nhánh.', 'error'); return
+  }
+  if (!branchModal.form.address.trim()) {
+    showToast('Vui lòng nhập địa chỉ chi nhánh.', 'error'); return
+  }
+  const lat = branchModal.form.latitude
+  const lng = branchModal.form.longitude
+  if (lat !== null && lat !== '' && (lat < -90 || lat > 90)) {
+    showToast('Vĩ độ phải trong khoảng -90 đến 90.', 'error'); return
+  }
+  if (lng !== null && lng !== '' && (lng < -180 || lng > 180)) {
+    showToast('Kinh độ phải trong khoảng -180 đến 180.', 'error'); return
+  }
   try {
     if (branchModal.mode === 'create') {
       const created = await adminApi.createBranch(branchModal.form)
