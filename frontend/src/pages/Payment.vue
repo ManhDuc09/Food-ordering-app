@@ -61,30 +61,121 @@
               <div class="grid gap-4">
                 <label class="block">
                   <span class="text-sm font-bold text-gray-700">Họ và tên</span>
-                  <input v-model="form.fullName" type="text" placeholder="Nguyễn Văn A" class="mt-2 w-full rounded-3xl border border-gray-200 px-4 py-3 focus:border-red-500 focus:outline-none" />
+                  <input
+                    v-model="form.fullName" type="text" placeholder="Nguyễn Văn A"
+                    class="mt-2 w-full rounded-3xl border px-4 py-3 focus:outline-none transition-colors"
+                    :class="fieldErrors.fullName ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-red-500'"
+                    @blur="touchField('fullName')"
+                  />
+                  <p v-if="fieldErrors.fullName" class="mt-1 text-xs text-red-500 px-2">{{ fieldErrors.fullName }}</p>
                 </label>
+
                 <label class="block">
                   <span class="text-sm font-bold text-gray-700">Số điện thoại</span>
-                  <input v-model="form.phone" type="tel" placeholder="0933 123 456" class="mt-2 w-full rounded-3xl border border-gray-200 px-4 py-3 focus:border-red-500 focus:outline-none" />
+                  <input
+                    v-model="form.phone" type="tel" placeholder="0912 345 678"
+                    class="mt-2 w-full rounded-3xl border px-4 py-3 focus:outline-none transition-colors"
+                    :class="fieldErrors.phone ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-red-500'"
+                    @blur="touchField('phone')"
+                  />
+                  <p v-if="fieldErrors.phone" class="mt-1 text-xs text-red-500 px-2">{{ fieldErrors.phone }}</p>
                 </label>
-                <label class="block">
-                  <span class="text-sm font-bold text-gray-700">Địa chỉ giao hàng</span>
-                  <input v-model="form.address" type="text" placeholder="Số 10, Đường ABC, Quận 1" class="mt-2 w-full rounded-3xl border border-gray-200 px-4 py-3 focus:border-red-500 focus:outline-none" />
-                </label>
+
+                <div class="block">
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm font-bold text-gray-700">Địa chỉ giao hàng</span>
+                    <router-link to="/profile" target="_blank"
+                      class="text-xs text-red-600 font-bold hover:underline flex items-center gap-1">
+                      + Quản lý địa chỉ
+                    </router-link>
+                  </div>
+
+                  <!-- No saved addresses -->
+                  <p v-if="savedAddresses.length === 0" class="text-xs text-gray-400 mb-2">
+                    Bạn chưa có địa chỉ nào.
+                    <router-link to="/profile" target="_blank" class="text-red-500 underline">Thêm trong hồ sơ</router-link>
+                  </p>
+
+                  <!-- Address cards -->
+                  <div v-if="savedAddresses.length > 0" class="space-y-2 mb-2">
+                    <label
+                      v-for="addr in savedAddresses" :key="addr.id"
+                      class="flex items-start gap-3 cursor-pointer rounded-2xl border-2 px-4 py-3 transition-colors"
+                      :class="selectedAddressId === addr.id ? 'border-red-500 bg-red-50' : 'border-gray-100 bg-white hover:border-gray-300'"
+                    >
+                      <input type="radio" :value="addr.id" v-model="selectedAddressId" class="mt-0.5 h-4 w-4 accent-red-600 shrink-0" />
+                      <div class="flex-1 min-w-0">
+                        <p class="text-sm font-semibold text-gray-800">{{ addr.street }}</p>
+                        <p v-if="addr.city" class="text-xs text-gray-500">{{ addr.city }}</p>
+                        <span v-if="addr.isDefault" class="text-xs font-bold text-red-500">Mặc định</span>
+                      </div>
+                    </label>
+
+                    <!-- Custom address option -->
+                    <label
+                      class="flex items-center gap-3 cursor-pointer rounded-2xl border-2 border-dashed px-4 py-3 transition-colors"
+                      :class="selectedAddressId === 'custom' ? 'border-red-400 bg-red-50' : 'border-gray-200 hover:border-gray-300'"
+                    >
+                      <input type="radio" value="custom" v-model="selectedAddressId" class="h-4 w-4 accent-red-600 shrink-0" />
+                      <span class="text-sm text-gray-500 font-semibold">Nhập địa chỉ khác...</span>
+                    </label>
+                  </div>
+
+                  <!-- Manual input (no saved addresses OR custom selected) -->
+                  <input
+                    v-if="savedAddresses.length === 0 || selectedAddressId === 'custom'"
+                    v-model="form.address" type="text" placeholder="Số 10, Đường ABC, Quận 1"
+                    class="w-full rounded-3xl border px-4 py-3 focus:outline-none transition-colors"
+                    :class="fieldErrors.address ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-red-500'"
+                    @blur="touchField('address')"
+                  />
+                  <p v-if="fieldErrors.address" class="mt-1 text-xs text-red-500 px-2">{{ fieldErrors.address }}</p>
+                </div>
               </div>
 
-              <!-- Branch picker - Map -->
+              <!-- Branch picker -->
               <div>
                 <p class="text-sm font-bold text-gray-700 mb-2">Chọn cửa hàng</p>
-                <div ref="branchMapEl" class="w-full h-64 rounded-2xl overflow-hidden border border-gray-200 mb-3"></div>
-                <div v-if="selectedBranch" class="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3">
-                  <span class="text-red-600 mt-0.5">📍</span>
-                  <div>
-                    <p class="text-sm font-semibold text-red-700">{{ selectedBranch.name }}</p>
-                    <p class="text-xs text-gray-500">{{ selectedBranch.address }}</p>
-                  </div>
+
+                <!-- Map -->
+                <div ref="branchMapEl" class="w-full h-48 rounded-2xl overflow-hidden border border-gray-200 mb-3"></div>
+
+                <!-- Search -->
+                <div class="relative mb-2">
+                  <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" />
+                  </svg>
+                  <input
+                    v-model="branchSearch" type="text" placeholder="Tìm chi nhánh..."
+                    class="w-full rounded-2xl border border-gray-200 pl-9 pr-4 py-2.5 text-sm focus:outline-none focus:border-red-400"
+                  />
                 </div>
-                <p v-else class="text-xs text-gray-400 text-center">Nhấn vào một địa điểm trên bản đồ để chọn cửa hàng</p>
+
+                <!-- Branch list -->
+                <div class="space-y-2 max-h-52 overflow-y-auto pr-0.5">
+                  <button
+                    v-for="branch in filteredBranches" :key="branch.branchId"
+                    type="button"
+                    @click="selectBranch(branch)"
+                    class="w-full flex items-start gap-3 text-left rounded-2xl border-2 px-4 py-3 transition-colors"
+                    :class="selectedBranch?.branchId === branch.branchId
+                      ? 'border-red-500 bg-red-50'
+                      : 'border-gray-100 bg-white hover:border-gray-300'"
+                  >
+                    <span class="shrink-0 mt-0.5" :class="selectedBranch?.branchId === branch.branchId ? 'text-red-500' : 'text-gray-400'">📍</span>
+                    <div class="min-w-0">
+                      <p class="text-sm font-semibold text-gray-800">{{ branch.name }}</p>
+                      <p class="text-xs text-gray-500 truncate">{{ branch.address }}</p>
+                    </div>
+                    <svg v-if="selectedBranch?.branchId === branch.branchId"
+                      class="shrink-0 w-4 h-4 text-red-500 mt-0.5 ml-auto" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                    </svg>
+                  </button>
+                  <p v-if="filteredBranches.length === 0" class="text-center text-sm text-gray-400 py-4">
+                    Không tìm thấy chi nhánh
+                  </p>
+                </div>
               </div>
 
               <div class="rounded-3xl border border-gray-200 bg-gray-50 p-5">
@@ -156,12 +247,13 @@
 </template>
 
 <script setup>
-import { computed, ref, onMounted, nextTick } from 'vue'
+import { computed, ref, watch, onMounted, nextTick } from 'vue'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { cartState, clearCart } from '@/store/cart.js'
 import { orderApi } from '@/api/order.js'
 import { branchApi } from '@/api/branch.js'
+import { profileApi } from '@/api/profile.js'
 import { showToast } from '@/store/toast.js'
 
 const form = ref({
@@ -172,13 +264,59 @@ const form = ref({
   branchId: ''
 })
 
+const savedAddresses = ref([])
+const selectedAddressId = ref(null)
+const fieldErrors = ref({ fullName: '', phone: '', address: '' })
+
+watch(selectedAddressId, (id) => {
+  if (id && id !== 'custom') {
+    const addr = savedAddresses.value.find(a => a.id === id)
+    if (addr) form.value.address = `${addr.street}${addr.city ? ', ' + addr.city : ''}`
+  } else if (id === 'custom') {
+    form.value.address = ''
+  }
+})
+
 const branchMapEl = ref(null)
 const selectedBranch = ref(null)
+const allBranches = ref([])
+const branchSearch = ref('')
+const mapInstance = ref(null)
+
+const filteredBranches = computed(() => {
+  const q = branchSearch.value.trim().toLowerCase()
+  if (!q) return allBranches.value
+  return allBranches.value.filter(b =>
+    b.name?.toLowerCase().includes(q) || b.address?.toLowerCase().includes(q)
+  )
+})
+
+const selectBranch = (branch) => {
+  form.value.branchId = branch.branchId
+  selectedBranch.value = branch
+  if (mapInstance.value && branch.latitude && branch.longitude) {
+    mapInstance.value.setView([branch.latitude, branch.longitude], 15)
+  }
+}
 
 onMounted(async () => {
-  let branches = []
+  // Load profile for autofill
   try {
-    branches = await branchApi.getAllBranches()
+    const profile = await profileApi.getProfile()
+    if (profile.fullName) form.value.fullName = profile.fullName
+    if (profile.phoneNumber) form.value.phone = profile.phoneNumber
+  } catch {}
+
+  // Load saved addresses
+  try {
+    savedAddresses.value = await profileApi.getAddresses()
+    const def = savedAddresses.value.find(a => a.isDefault) || savedAddresses.value[0]
+    if (def) selectedAddressId.value = def.id
+  } catch {}
+
+  // Load branches for map
+  try {
+    allBranches.value = await branchApi.getAllBranches()
   } catch (e) {
     console.error(e)
   }
@@ -187,22 +325,20 @@ onMounted(async () => {
   if (!branchMapEl.value) return
 
   const map = L.map(branchMapEl.value).setView([10.7626, 106.6602], 12)
+  mapInstance.value = map
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
   }).addTo(map)
 
-  branches.forEach(branch => {
+  allBranches.value.forEach(branch => {
     if (!branch.latitude || !branch.longitude) return
     const marker = L.marker([branch.latitude, branch.longitude])
       .addTo(map)
       .bindPopup(`<b>${branch.name}</b><br><small>${branch.address || ''}</small>`)
-
-    marker.on('click', () => {
-      form.value.branchId = branch.branchId
-      selectedBranch.value = branch
-    })
+    marker.on('click', () => selectBranch(branch))
   })
 })
+
 const error = ref('')
 const submitted = ref(false)
 const confirmationCode = ref('')
@@ -213,22 +349,36 @@ const cartItems = computed(() => cartState.items)
 const totalQuantity = computed(() => cartItems.value.reduce((sum, item) => sum + item.quantity, 0))
 const totalPrice = computed(() => cartItems.value.reduce((sum, item) => sum + item.price * item.quantity, 0))
 
-const formatPrice = (value) => {
-  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' })
-    .format(value).replace('₫', 'đ')
-}
+const formatPrice = (value) =>
+  new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value).replace('₫', 'đ')
 
-const buildConfirmationCode = () => {
-  return `KFC-${Math.random().toString(36).substr(2, 6).toUpperCase()}`
+const buildConfirmationCode = () =>
+  `KFC-${Math.random().toString(36).slice(2, 8).toUpperCase()}`
+
+const validatePhone = (phone) => /^0[3-9]\d{8}$/.test(phone.replace(/[\s-]/g, ''))
+
+const touchField = (field) => {
+  if (field === 'fullName') {
+    fieldErrors.value.fullName = form.value.fullName.trim().length < 2
+      ? 'Vui lòng nhập họ và tên (ít nhất 2 ký tự).' : ''
+  }
+  if (field === 'phone') {
+    fieldErrors.value.phone = !validatePhone(form.value.phone)
+      ? 'Số điện thoại không hợp lệ (VD: 0912 345 678).' : ''
+  }
+  if (field === 'address') {
+    fieldErrors.value.address = !form.value.address.trim()
+      ? 'Vui lòng nhập địa chỉ giao hàng.' : ''
+  }
 }
 
 const validateForm = () => {
-  if (!form.value.fullName.trim() || !form.value.phone.trim() || !form.value.address.trim()) {
-    error.value = 'Vui lòng điền đầy đủ thông tin liên hệ và địa chỉ.'
-    return false
-  }
+  touchField('fullName')
+  touchField('phone')
+  touchField('address')
+  if (fieldErrors.value.fullName || fieldErrors.value.phone || fieldErrors.value.address) return false
   if (!form.value.branchId) {
-    error.value = 'Vui lòng chọn cửa hàng.'
+    error.value = 'Vui lòng chọn cửa hàng trên bản đồ.'
     return false
   }
   return true

@@ -1,14 +1,14 @@
 import { reactive } from 'vue'
 
 export const authState = reactive({
-  isLoggedIn: !!sessionStorage.getItem('user'),
-  user: JSON.parse(sessionStorage.getItem('user') || 'null'),
+  isLoggedIn: !!localStorage.getItem('user'),
+  user: JSON.parse(localStorage.getItem('user') || 'null'),
   sessionExpired: false
 })
 
 export const syncAuth = () => {
-  authState.isLoggedIn = !!sessionStorage.getItem('user')
-  authState.user = JSON.parse(sessionStorage.getItem('user') || 'null')
+  authState.isLoggedIn = !!localStorage.getItem('user')
+  authState.user = JSON.parse(localStorage.getItem('user') || 'null')
 }
 
 export const logout = async () => {
@@ -18,14 +18,14 @@ export const logout = async () => {
       credentials: 'include'
     })
   } catch {}
-  sessionStorage.removeItem('user')
-  sessionStorage.removeItem('expiresAt')
+  localStorage.removeItem('user')
+  localStorage.removeItem('expiresAt')
   authState.isLoggedIn = false
   authState.user = null
 }
 
 export const checkAndHandleExpiry = () => {
-  const expiresAt = sessionStorage.getItem('expiresAt')
+  const expiresAt = localStorage.getItem('expiresAt')
   if (expiresAt && Date.now() > Number(expiresAt)) {
     logout()
     authState.sessionExpired = true

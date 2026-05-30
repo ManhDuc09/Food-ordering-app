@@ -403,7 +403,7 @@ import { showToast } from '../store/toast'
 
 const router = useRouter()
 
-const user = JSON.parse(sessionStorage.getItem('user') || 'null')
+const user = JSON.parse(localStorage.getItem('user') || 'null')
 const userEmail = user?.email || ''
 
 const today = new Date().toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })

@@ -103,8 +103,8 @@ const handleLogin = async () => {
   try {
     const data = await authApi.login(email.value, password.value)
 
-    sessionStorage.setItem('user', JSON.stringify({ email: data.email, role: data.role, branchName: data.branchName }))
-    sessionStorage.setItem('expiresAt', data.expiresAt)
+    localStorage.setItem('user', JSON.stringify({ email: data.email, role: data.role, branchName: data.branchName }))
+    localStorage.setItem('expiresAt', data.expiresAt)
     syncAuth()
 
     showToast('Đăng nhập thành công!')
