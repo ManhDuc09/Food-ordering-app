@@ -1,24 +1,17 @@
 const BASE = `${import.meta.env.VITE_API_BASE_URL}/api/manager`
 
-const headers = () => ({
-  'Content-Type': 'application/json',
-  Authorization: `Bearer ${sessionStorage.getItem('token')}`
-})
+const req = async (url, opts = {}) => {
+  const res = await fetch(url, {
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    ...opts
+  })
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return res.json()
+}
 
 export const managerApi = {
-  getOrders: async () => {
-    const res = await fetch(`${BASE}/orders`, { headers: headers() })
-    if (!res.ok) throw new Error('Failed to fetch orders')
-    return res.json()
-  },
-
-  updateStatus: async (orderId, status) => {
-    const res = await fetch(`${BASE}/orders/${orderId}/status`, {
-      method: 'PATCH',
-      headers: headers(),
-      body: JSON.stringify({ status })
-    })
-    if (!res.ok) throw new Error('Failed to update status')
-    return res.json()
-  }
+  getOrders: () => req(`${BASE}/orders`),
+  updateStatus: (orderId, status) =>
+    req(`${BASE}/orders/${orderId}/status`, { method: 'PATCH', body: JSON.stringify({ status }) })
 }

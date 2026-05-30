@@ -143,8 +143,8 @@ const handleRegister = async () => {
       phoneNumber: phone.value
     })
 
-    sessionStorage.setItem('token', data.token)
     sessionStorage.setItem('user', JSON.stringify({ email: data.email, role: data.role }))
+    sessionStorage.setItem('expiresAt', data.expiresAt)
 
     showToast('Đăng ký thành công! Chào mừng bạn!')
     router.push('/')

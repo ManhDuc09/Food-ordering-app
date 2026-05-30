@@ -47,12 +47,14 @@ import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { authState, logout } from '../store/auth'
 import { cartState } from '../store/cart'
+import { showToast } from '../store/toast'
 
 const router = useRouter()
 const cartCount = computed(() => cartState.items.reduce((total, item) => total + item.quantity, 0))
 
-const handleLogout = () => {
-  logout()
+const handleLogout = async () => {
+  await logout()
+  showToast('Đã đăng xuất.', 'succuess')
   router.push('/')
 }
 </script>

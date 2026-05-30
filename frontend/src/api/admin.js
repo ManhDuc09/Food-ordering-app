@@ -1,10 +1,5 @@
 const BASE = `${import.meta.env.VITE_API_BASE_URL}/api/admin`
 
-const headers = () => ({
-  'Content-Type': 'application/json',
-  Authorization: `Bearer ${sessionStorage.getItem('token')}`
-})
-
 const handle = async (res) => {
   if (!res.ok) {
     const msg = await res.text().catch(() => res.statusText)
@@ -14,35 +9,26 @@ const handle = async (res) => {
   return res.json()
 }
 
+const req = (url, opts = {}) =>
+  fetch(url, {
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    ...opts
+  }).then(handle)
+
 export const adminApi = {
-  // Users
-  getUsers: () => fetch(`${BASE}/users`, { headers: headers() }).then(handle),
+  getUsers: () => req(`${BASE}/users`),
   updateUserRole: (userId, role, branchId) =>
-    fetch(`${BASE}/users/${userId}/role`, {
-      method: 'PATCH',
-      headers: headers(),
-      body: JSON.stringify({ role, branchId: branchId || null })
-    }).then(handle),
+    req(`${BASE}/users/${userId}/role`, { method: 'PATCH', body: JSON.stringify({ role, branchId: branchId || null }) }),
 
-  // Products
-  createProduct: (data) =>
-    fetch(`${BASE}/products`, { method: 'POST', headers: headers(), body: JSON.stringify(data) }).then(handle),
-  updateProduct: (productId, data) =>
-    fetch(`${BASE}/products/${productId}`, { method: 'PUT', headers: headers(), body: JSON.stringify(data) }).then(handle),
-  deleteProduct: (productId) =>
-    fetch(`${BASE}/products/${productId}`, { method: 'DELETE', headers: headers() }).then(handle),
+  createProduct: (data) => req(`${BASE}/products`, { method: 'POST', body: JSON.stringify(data) }),
+  updateProduct: (productId, data) => req(`${BASE}/products/${productId}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteProduct: (productId) => req(`${BASE}/products/${productId}`, { method: 'DELETE' }),
 
-  // Categories
-  createCategory: (name) =>
-    fetch(`${BASE}/categories`, { method: 'POST', headers: headers(), body: JSON.stringify({ name }) }).then(handle),
-  deleteCategory: (categoryId) =>
-    fetch(`${BASE}/categories/${categoryId}`, { method: 'DELETE', headers: headers() }).then(handle),
+  createCategory: (name) => req(`${BASE}/categories`, { method: 'POST', body: JSON.stringify({ name }) }),
+  deleteCategory: (categoryId) => req(`${BASE}/categories/${categoryId}`, { method: 'DELETE' }),
 
-  // Branches
-  createBranch: (data) =>
-    fetch(`${BASE}/branches`, { method: 'POST', headers: headers(), body: JSON.stringify(data) }).then(handle),
-  updateBranch: (branchId, data) =>
-    fetch(`${BASE}/branches/${branchId}`, { method: 'PUT', headers: headers(), body: JSON.stringify(data) }).then(handle),
-  deleteBranch: (branchId) =>
-    fetch(`${BASE}/branches/${branchId}`, { method: 'DELETE', headers: headers() }).then(handle),
+  createBranch: (data) => req(`${BASE}/branches`, { method: 'POST', body: JSON.stringify(data) }),
+  updateBranch: (branchId, data) => req(`${BASE}/branches/${branchId}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteBranch: (branchId) => req(`${BASE}/branches/${branchId}`, { method: 'DELETE' }),
 }

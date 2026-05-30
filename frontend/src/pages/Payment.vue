@@ -257,10 +257,10 @@ const submitPayment = async () => {
     const result = await orderApi.createOrder(orderPayload)
 
     if (form.value.paymentMethod === 'VNPAY') {
-      const token = sessionStorage.getItem('token')
       const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/payment/vnpay/create`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ orderId: result.orderId })
       })
       if (!res.ok) throw new Error('Không thể tạo liên kết thanh toán VNPay')

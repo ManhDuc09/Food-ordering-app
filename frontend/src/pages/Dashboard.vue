@@ -229,6 +229,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { managerApi } from '../api/manager'
 import { logout } from '../store/auth'
+import { showToast } from '../store/toast'
 
 const router = useRouter()
 
@@ -291,8 +292,9 @@ const changeStatus = async (orderId, status) => {
   }
 }
 
-const handleLogout = () => {
-  logout()
+const handleLogout = async () => {
+  await logout()
+  showToast('Đã đăng xuất.', 'error')
   router.push('/login')
 }
 

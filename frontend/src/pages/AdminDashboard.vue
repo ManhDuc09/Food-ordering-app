@@ -399,6 +399,7 @@ import { fetchProducts } from '../api/product'
 import { fetchCategories } from '../api/categories'
 import { branchApi } from '../api/branch'
 import { logout } from '../store/auth'
+import { showToast } from '../store/toast'
 
 const router = useRouter()
 
@@ -658,8 +659,9 @@ const uploadImage = async (e) => {
 
 // ── Auth ──────────────────────────────────────────────────
 
-const handleLogout = () => {
-  logout()
+const handleLogout = async () => {
+  await logout()
+  showToast('Đã đăng xuất.', 'error')
   router.push('/login')
 }
 

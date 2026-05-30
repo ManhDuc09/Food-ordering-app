@@ -1,95 +1,35 @@
 const BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/api`
 
-const authHeader = () => ({
-  'Content-Type': 'application/json',
-  Authorization: `Bearer ${sessionStorage.getItem('token')}`
-})
+const req = async (url, opts = {}) => {
+  const res = await fetch(url, {
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    ...opts
+  })
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  if (res.status === 204) return null
+  return res.json()
+}
 
 export const profileApi = {
-  async getProfile() {
-    const res = await fetch(`${BASE_URL}/user/profile`, { headers: authHeader() })
-    if (!res.ok) throw new Error('Không thể tải thông tin')
-    return res.json()
-  },
+  getProfile: () => req(`${BASE_URL}/user/profile`),
 
-  async updateProfile(data) {
-    const res = await fetch(`${BASE_URL}/user/profile`, {
-      method: 'PUT',
-      headers: authHeader(),
-      body: JSON.stringify(data)
-    })
-    if (!res.ok) throw new Error('Cập nhật thất bại')
-    return res.json()
-  },
+  updateProfile: (data) => req(`${BASE_URL}/user/profile`, { method: 'PUT', body: JSON.stringify(data) }),
 
-  async getAddresses() {
-    const res = await fetch(`${BASE_URL}/addresses`, { headers: authHeader() })
-    if (!res.ok) throw new Error('Không thể tải địa chỉ')
-    return res.json()
-  },
+  getAddresses: () => req(`${BASE_URL}/addresses`),
 
-  async addAddress(data) {
-    const res = await fetch(`${BASE_URL}/addresses`, {
-      method: 'POST',
-      headers: authHeader(),
-      body: JSON.stringify(data)
-    })
-    if (!res.ok) throw new Error('Thêm địa chỉ thất bại')
-    return res.json()
-  },
+  addAddress: (data) => req(`${BASE_URL}/addresses`, { method: 'POST', body: JSON.stringify(data) }),
 
-  async updateAddress(id, data) {
-    const res = await fetch(`${BASE_URL}/addresses/${id}`, {
-      method: 'PUT',
-      headers: authHeader(),
-      body: JSON.stringify(data)
-    })
-    if (!res.ok) throw new Error('Cập nhật địa chỉ thất bại')
-    return res.json()
-  },
+  updateAddress: (id, data) => req(`${BASE_URL}/addresses/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
 
-  async deleteAddress(id) {
-    const res = await fetch(`${BASE_URL}/addresses/${id}`, {
-      method: 'DELETE',
-      headers: authHeader()
-    })
-    if (!res.ok) throw new Error('Xóa địa chỉ thất bại')
-  },
+  deleteAddress: (id) => req(`${BASE_URL}/addresses/${id}`, { method: 'DELETE' }),
 
-  async setDefaultAddress(id) {
-    const res = await fetch(`${BASE_URL}/addresses/${id}/default`, {
-      method: 'PATCH',
-      headers: authHeader()
-    })
-    if (!res.ok) throw new Error('Không thể đặt địa chỉ mặc định')
-    return res.json()
-  },
+  setDefaultAddress: (id) => req(`${BASE_URL}/addresses/${id}/default`, { method: 'PATCH' }),
 
-  async getMyOrders() {
-    const res = await fetch(`${BASE_URL}/orders/my`, { headers: authHeader() })
-    if (!res.ok) throw new Error('Không thể tải đơn hàng')
-    return res.json()
-  },
+  getMyOrders: () => req(`${BASE_URL}/orders/my`),
 
-  async updatePaymentMethod(orderId, method) {
-    const res = await fetch(`${BASE_URL}/orders/${orderId}/payment`, {
-      method: 'PATCH',
-      headers: authHeader(),
-      body: JSON.stringify({ method })
-    })
-    if (!res.ok) throw new Error('Cập nhật thất bại')
-    return res.json()
-  },
+  updatePaymentMethod: (orderId, method) =>
+    req(`${BASE_URL}/orders/${orderId}/payment`, { method: 'PATCH', body: JSON.stringify({ method }) }),
 
-  async cancelOrder(orderId) {
-    const res = await fetch(`${BASE_URL}/orders/${orderId}/cancel`, {
-      method: 'PATCH',
-      headers: authHeader()
-    })
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}))
-      throw new Error(err.error || 'Hủy đơn thất bại')
-    }
-    return res.json()
-  }
+  cancelOrder: (orderId) => req(`${BASE_URL}/orders/${orderId}/cancel`, { method: 'PATCH' })
 }

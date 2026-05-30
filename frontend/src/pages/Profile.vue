@@ -445,10 +445,10 @@ async function cancelOrder(order) {
 async function repay(order) {
   repayingId.value = order.orderId
   try {
-    const token = sessionStorage.getItem('token')
     const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/payment/vnpay/create`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ orderId: order.orderId })
     })
     if (!res.ok) throw new Error()
