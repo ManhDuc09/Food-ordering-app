@@ -75,6 +75,43 @@
         </div>
       </div>
 
+      <!-- Password change card -->
+      <div v-if="activeTab === 'info'" class="bg-white rounded-2xl shadow-sm p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-bold">Đổi mật khẩu</h2>
+          <button v-if="!changingPassword" @click="changingPassword = true"
+            class="text-sm text-red-600 font-semibold hover:underline">Thay đổi</button>
+        </div>
+
+        <div v-if="!changingPassword" class="text-sm text-gray-400">••••••••</div>
+
+        <div v-else class="space-y-3">
+          <div>
+            <label class="text-sm text-gray-500 block mb-1">Mật khẩu hiện tại</label>
+            <input v-model="passwordForm.current" type="password"
+              class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-400" />
+          </div>
+          <div>
+            <label class="text-sm text-gray-500 block mb-1">Mật khẩu mới</label>
+            <input v-model="passwordForm.next" type="password"
+              class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-400" />
+          </div>
+          <div>
+            <label class="text-sm text-gray-500 block mb-1">Xác nhận mật khẩu mới</label>
+            <input v-model="passwordForm.confirm" type="password"
+              class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-400" />
+          </div>
+          <div class="flex gap-2 pt-1">
+            <button @click="submitPasswordChange" :disabled="savingPassword"
+              class="bg-red-600 text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-red-700 disabled:opacity-50">
+              {{ savingPassword ? 'Đang lưu...' : 'Lưu' }}
+            </button>
+            <button @click="changingPassword = false"
+              class="text-sm text-gray-500 px-4 py-2 rounded-lg hover:bg-gray-100">Hủy</button>
+          </div>
+        </div>
+      </div>
+
       <!-- Tab: Addresses -->
       <div v-if="activeTab === 'addresses'" class="bg-white rounded-2xl shadow-sm p-6">
         <div class="flex items-center justify-between mb-4">
@@ -209,6 +246,14 @@
             </button>
           </div>
         </div>
+
+        <!-- Load more button -->
+        <div v-if="hasMore" class="text-center">
+          <button @click="loadMore" :disabled="loadingMore"
+            class="px-6 py-2 text-sm font-bold text-red-600 border border-red-200 rounded-full hover:bg-red-50 disabled:opacity-50 transition-colors">
+            {{ loadingMore ? 'Đang tải...' : 'Xem thêm' }}
+          </button>
+        </div>
       </div>
 
     </div>
@@ -289,6 +334,9 @@ const profile = ref({ fullName: '', email: '', phoneNumber: '' })
 const addresses = ref([])
 const orders = ref([])
 const loadingOrders = ref(false)
+const loadingMore = ref(false)
+const hasMore = ref(false)
+const currentPage = ref(0)
 
 const editingProfile = ref(false)
 const savingProfile = ref(false)
@@ -308,6 +356,9 @@ const savingMethod = ref(false)
 const changeMethodError = ref('')
 const repayingId = ref(null)
 const cancellingId = ref(null)
+const changingPassword = ref(false)
+const savingPassword = ref(false)
+const passwordForm = ref({ current: '', next: '', confirm: '' })
 
 const paymentMethods = [
   { value: 'COD', icon: '🛵', label: 'Thanh toán khi nhận hàng', desc: 'Trả tiền mặt khi giao hàng' },
@@ -335,10 +386,26 @@ async function onOrdersTabOpen() {
   if (ordersLoaded.value) return
   loadingOrders.value = true
   try {
-    orders.value = await profileApi.getMyOrders()
+    const data = await profileApi.getMyOrders(0)
+    orders.value = data.orders
+    hasMore.value = data.hasMore
+    currentPage.value = 0
     ordersLoaded.value = true
   } finally {
     loadingOrders.value = false
+  }
+}
+
+async function loadMore() {
+  loadingMore.value = true
+  try {
+    const nextPage = currentPage.value + 1
+    const data = await profileApi.getMyOrders(nextPage)
+    orders.value.push(...data.orders)
+    hasMore.value = data.hasMore
+    currentPage.value = nextPage
+  } finally {
+    loadingMore.value = false
   }
 }
 
@@ -430,6 +497,30 @@ async function removeAddress(id) {
 async function makeDefault(id) {
   const updated = await profileApi.setDefaultAddress(id)
   addresses.value = addresses.value.map(a => ({ ...a, isDefault: a.id === updated.id }))
+}
+
+// --- Password change ---
+async function submitPasswordChange() {
+  if (!passwordForm.value.current) {
+    showToast('Vui lòng nhập mật khẩu hiện tại.', 'error'); return
+  }
+  if (passwordForm.value.next.length < 6) {
+    showToast('Mật khẩu mới phải có ít nhất 6 ký tự.', 'error'); return
+  }
+  if (passwordForm.value.next !== passwordForm.value.confirm) {
+    showToast('Mật khẩu xác nhận không khớp.', 'error'); return
+  }
+  savingPassword.value = true
+  try {
+    await profileApi.changePassword(passwordForm.value.current, passwordForm.value.next)
+    showToast('Đổi mật khẩu thành công!')
+    changingPassword.value = false
+    passwordForm.value = { current: '', next: '', confirm: '' }
+  } catch (e) {
+    showToast(e.message || 'Đổi mật khẩu thất bại.', 'error')
+  } finally {
+    savingPassword.value = false
+  }
 }
 
 // --- Cancel order ---

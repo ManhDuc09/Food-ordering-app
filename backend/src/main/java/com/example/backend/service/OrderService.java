@@ -19,10 +19,14 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -100,16 +104,25 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true)
-    public List<OrderDetailResponse> getMyOrders() {
+    public Map<String, Object> getMyOrders(int page, int size) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByEmail(email).orElseThrow();
 
-        return orderRepository.findByUserOrderByCreatedAtDesc(user).stream()
+        Page<Order> orderPage = orderRepository.findByUserOrderByCreatedAtDesc(
+                user, PageRequest.of(page, size));
+
+        List<OrderDetailResponse> orders = orderPage.getContent().stream()
                 .map(order -> {
                     Payment payment = paymentRepository.findByOrder(order).orElse(null);
                     return toDetailResponse(order, payment);
                 })
                 .collect(Collectors.toList());
+
+        return Map.of(
+                "orders", orders,
+                "hasMore", !orderPage.isLast(),
+                "page", page
+        );
     }
 
     @Transactional

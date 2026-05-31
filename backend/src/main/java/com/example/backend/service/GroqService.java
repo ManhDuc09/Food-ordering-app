@@ -47,7 +47,15 @@ public class GroqService {
     private final RestClient restClient = RestClient.create();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    private volatile String cachedContext = null;
+    private volatile long cacheTime = 0;
+    private static final long CACHE_TTL_MS = 5 * 60 * 1000;
+
     private String buildSystemPrompt() {
+        long now = System.currentTimeMillis();
+        if (cachedContext != null && (now - cacheTime) < CACHE_TTL_MS) {
+            return cachedContext;
+        }
         StringBuilder sb = new StringBuilder(BASE_PROMPT);
 
         try {
@@ -88,7 +96,9 @@ public class GroqService {
             log.warn("Could not load branches for context: {}", e.getMessage());
         }
 
-        return sb.toString();
+        cachedContext = sb.toString();
+        cacheTime = System.currentTimeMillis();
+        return cachedContext;
     }
 
     public String chat(List<Map<String, String>> messages) {

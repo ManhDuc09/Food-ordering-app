@@ -1,5 +1,6 @@
 package com.example.backend.controller;
 
+import com.example.backend.dto.user.ChangePasswordRequest;
 import com.example.backend.dto.user.UserProfileRequest;
 import com.example.backend.dto.user.UserProfileResponse;
 import com.example.backend.service.UserService;
@@ -22,5 +23,11 @@ public class UserController {
     @PutMapping("/profile")
     public ResponseEntity<UserProfileResponse> updateProfile(@RequestBody UserProfileRequest request) {
         return ResponseEntity.ok(userService.updateProfile(request));
+    }
+
+    @PatchMapping("/password")
+    public ResponseEntity<?> changePassword(@RequestBody ChangePasswordRequest request) {
+        userService.changePassword(request);
+        return ResponseEntity.ok().build();
     }
 }

@@ -26,10 +26,13 @@ export const profileApi = {
 
   setDefaultAddress: (id) => req(`${BASE_URL}/addresses/${id}/default`, { method: 'PATCH' }),
 
-  getMyOrders: () => req(`${BASE_URL}/orders/my`),
+  getMyOrders: (page = 0, size = 5) => req(`${BASE_URL}/orders/my?page=${page}&size=${size}`),
 
   updatePaymentMethod: (orderId, method) =>
     req(`${BASE_URL}/orders/${orderId}/payment`, { method: 'PATCH', body: JSON.stringify({ method }) }),
 
-  cancelOrder: (orderId) => req(`${BASE_URL}/orders/${orderId}/cancel`, { method: 'PATCH' })
+  cancelOrder: (orderId) => req(`${BASE_URL}/orders/${orderId}/cancel`, { method: 'PATCH' }),
+
+  changePassword: (currentPassword, newPassword) =>
+    req(`${BASE_URL}/user/password`, { method: 'PATCH', body: JSON.stringify({ currentPassword, newPassword }) })
 }
