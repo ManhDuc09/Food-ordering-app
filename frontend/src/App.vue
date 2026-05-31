@@ -3,6 +3,7 @@ import { onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import MainLayout from './layouts/MainLayout.vue'
 import ToastContainer from './components/ToastContainer.vue'
+import ChatWidget from './components/ChatWidget.vue'
 import { authState, checkAndHandleExpiry } from './store/auth'
 
 const route = useRoute()
@@ -27,6 +28,7 @@ onUnmounted(() => clearInterval(expiryInterval))
   <router-view v-if="route.meta.layout === 'dashboard'" />
   <MainLayout v-else />
   <ToastContainer />
+  <ChatWidget />
 
   <Transition name="fade">
     <div
