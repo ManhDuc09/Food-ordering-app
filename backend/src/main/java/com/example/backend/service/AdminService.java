@@ -16,7 +16,7 @@ import com.example.backend.model.Categories;
 import com.example.backend.model.Product;
 import com.example.backend.model.User;
 import com.example.backend.repository.BranchRepository;
-import com.example.backend.repository.CategoriesRespository;
+import com.example.backend.repository.CategoriesRepository;
 import com.example.backend.repository.ProductRepository;
 import com.example.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +36,7 @@ public class AdminService {
 
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
-    private final CategoriesRespository categoriesRepository;
+    private final CategoriesRepository categoriesRepository;
     private final BranchRepository branchRepository;
     private final BranchMapper branchMapper;
     private final ProductMapper productMapper;

@@ -6,6 +6,7 @@ import com.example.backend.model.User;
 import com.example.backend.repository.AddressRepository;
 import com.example.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AddressService {
@@ -30,12 +32,15 @@ public class AddressService {
 
     @Transactional
     public AddressDto addAddress(AddressDto dto) {
+        User user = currentUser();
         Address address = new Address();
-        address.setUser(currentUser());
+        address.setUser(user);
         address.setStreet(dto.getStreet());
         address.setCity(dto.getCity());
         address.setIsDefault(false);
-        return toDto(addressRepository.save(address));
+        AddressDto saved = toDto(addressRepository.save(address));
+        log.info("Address added for user: {}", user.getEmail());
+        return saved;
     }
 
     @Transactional
@@ -44,12 +49,15 @@ public class AddressService {
         Address address = findOwnedAddress(id, user);
         address.setStreet(dto.getStreet());
         address.setCity(dto.getCity());
+        log.info("Address {} updated for user: {}", id, user.getEmail());
         return toDto(addressRepository.save(address));
     }
 
     @Transactional
     public void deleteAddress(UUID id) {
-        addressRepository.delete(findOwnedAddress(id, currentUser()));
+        User user = currentUser();
+        addressRepository.delete(findOwnedAddress(id, user));
+        log.info("Address {} deleted for user: {}", id, user.getEmail());
     }
 
     @Transactional
@@ -58,6 +66,7 @@ public class AddressService {
         Address address = findOwnedAddress(id, user);
         addressRepository.clearDefaultForUser(user);
         address.setIsDefault(true);
+        log.info("Default address set to {} for user: {}", id, user.getEmail());
         return toDto(addressRepository.save(address));
     }
 
@@ -65,6 +74,7 @@ public class AddressService {
         Address address = addressRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Address not found"));
         if (!address.getUser().getUserId().equals(user.getUserId())) {
+            log.warn("Unauthorized address access by {} on address {}", user.getEmail(), id);
             throw new RuntimeException("Forbidden");
         }
         return address;

@@ -1,5 +1,6 @@
 package com.example.backend.controller;
 
+import com.example.backend.enums.PaymentStatus;
 import com.example.backend.model.Order;
 import com.example.backend.model.Payment;
 import com.example.backend.repository.OrderRepository;
@@ -52,7 +53,7 @@ public class VNPayController {
                 if (order != null) {
                     Payment payment = paymentRepository.findByOrder(order).orElse(null);
                     if (payment != null) {
-                        payment.setStatus("paid");
+                        payment.setStatus(PaymentStatus.PAID.value);
                         payment.setPaidAt(LocalDateTime.now());
                         paymentRepository.save(payment);
                     }

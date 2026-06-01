@@ -14,7 +14,10 @@ import com.example.backend.repository.OrderRepository;
 import com.example.backend.repository.PaymentRepository;
 import com.example.backend.repository.ProductRepository;
 import com.example.backend.repository.UserRepository;
+import com.example.backend.enums.OrderStatus;
+import com.example.backend.enums.PaymentStatus;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +34,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class OrderService {
@@ -57,7 +61,7 @@ public class OrderService {
 
         Order order = new Order();
         order.setUser(user);
-        order.setStatus("pending");
+        order.setStatus(OrderStatus.PENDING.value);
         order.setDeliveryName(request.getFullName());
         order.setDeliveryPhone(request.getPhone());
         order.setDeliveryAddress(request.getAddress());
@@ -92,11 +96,12 @@ public class OrderService {
         order.setTotalAmount(totalAmount);
 
         Order savedOrder = orderRepository.save(order);
+        log.info("Order created: {} for user: {}", savedOrder.getOrderId(), email);
 
         Payment payment = new Payment();
         payment.setOrder(savedOrder);
         payment.setMethod(request.getPaymentMethod() != null ? request.getPaymentMethod().toUpperCase() : "COD");
-        payment.setStatus("pending");
+        payment.setStatus(PaymentStatus.PENDING.value);
         payment.setPaidAt(null);
         paymentRepository.save(payment);
 
@@ -134,14 +139,16 @@ public class OrderService {
                 .orElseThrow(() -> new RuntimeException("Order not found"));
 
         if (!order.getUser().getUserId().equals(user.getUserId())) {
+            log.warn("Unauthorized payment update attempt by {} on order {}", email, orderId);
             throw new RuntimeException("Unauthorized");
         }
 
         Payment payment = paymentRepository.findByOrder(order)
                 .orElseThrow(() -> new RuntimeException("Payment not found"));
 
+        log.info("Updating payment method for order {} to {}", orderId, newMethod);
         payment.setMethod(newMethod.toUpperCase());
-        payment.setStatus("COD".equals(payment.getMethod()) ? "paid" : "pending");
+        payment.setStatus("COD".equals(payment.getMethod()) ? PaymentStatus.PAID.value : PaymentStatus.PENDING.value);
         if ("COD".equals(payment.getMethod())) {
             payment.setPaidAt(LocalDateTime.now());
         }
@@ -159,14 +166,16 @@ public class OrderService {
                 .orElseThrow(() -> new RuntimeException("Order not found"));
 
         if (!order.getUser().getUserId().equals(user.getUserId())) {
+            log.warn("Unauthorized cancel attempt by {} on order {}", email, orderId);
             throw new RuntimeException("Unauthorized");
         }
 
-        if ("cancelled".equals(order.getStatus()) || "delivered".equals(order.getStatus())) {
+        if (OrderStatus.CANCELLED.value.equals(order.getStatus()) || OrderStatus.DELIVERED.value.equals(order.getStatus())) {
             throw new RuntimeException("Không thể hủy đơn hàng này");
         }
 
-        order.setStatus("cancelled");
+        log.info("Order {} cancelled by {}", orderId, email);
+        order.setStatus(OrderStatus.CANCELLED.value);
         orderRepository.save(order);
 
         Payment payment = paymentRepository.findByOrder(order).orElse(null);

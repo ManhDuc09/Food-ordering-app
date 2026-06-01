@@ -5,6 +5,7 @@ import com.example.backend.dto.auth.AuthResponse;
 import com.example.backend.service.AuthService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,14 +20,14 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody AuthRequest request, HttpServletResponse response) {
+    public ResponseEntity<?> login(@Valid @RequestBody AuthRequest request, HttpServletResponse response) {
         AuthResponse auth = authService.login(request);
         setJwtCookie(response, auth.getToken());
         return ResponseEntity.ok(publicResponse(auth));
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody AuthRequest request, HttpServletResponse response) {
+    public ResponseEntity<?> register(@Valid @RequestBody AuthRequest request, HttpServletResponse response) {
         AuthResponse auth = authService.register(request);
         setJwtCookie(response, auth.getToken());
         return ResponseEntity.ok(publicResponse(auth));

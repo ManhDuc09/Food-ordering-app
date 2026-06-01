@@ -4,45 +4,45 @@ import com.example.backend.dto.product.ProductResponse;
 import com.example.backend.mapper.ProductMapper;
 import com.example.backend.model.Product;
 import com.example.backend.repository.ProductRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class ProductService {
 
-    @Autowired
-    private ProductRepository productRepository;
+    private final ProductRepository productRepository;
+    private final ProductMapper productMapper;
 
-    @Autowired
-    private ProductMapper productMapper;
-
-    public List<ProductResponse> getAllProducts() {  
+    public List<ProductResponse> getAllProducts() {
         List<Product> products = productRepository.getAll();
-    
-    
-    products.forEach(p -> System.out.println("Product: " + p.getName() + " | Categories size: " + p.getCategories().size()));
-        return products
-                .stream()  
-                .map(productMapper::productToResponse)  
-                .toList();  
-    }  
+        log.debug("Fetched {} products", products.size());
+        return products.stream()
+                .map(productMapper::productToResponse)
+                .toList();
+    }
 
-    public List<ProductResponse> getAvailableProducts() {  
-        return productRepository.getAvailable() // Updated method
-                .stream()  
-                .map(productMapper::productToResponse)  
-                .toList();  
+    public List<ProductResponse> getAvailableProducts() {
+        List<Product> products = productRepository.getAvailable();
+        log.debug("Fetched {} available products", products.size());
+        return products.stream()
+                .map(productMapper::productToResponse)
+                .toList();
     }
 
     @Transactional(readOnly = true)
     public ProductResponse getProductById(UUID id) {
         Product product = productRepository.findByProductId(id)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+                .orElseThrow(() -> {
+                    log.warn("Product not found: {}", id);
+                    return new RuntimeException("Product not found");
+                });
         return productMapper.productToResponse(product);
     }
 }

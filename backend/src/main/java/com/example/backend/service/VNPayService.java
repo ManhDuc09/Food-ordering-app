@@ -1,5 +1,6 @@
 package com.example.backend.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -10,6 +11,7 @@ import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+@Slf4j
 @Service
 public class VNPayService {
 
@@ -56,12 +58,16 @@ public class VNPayService {
 
         String secureHash = hmacSHA512(hashSecret, hashData.toString());
         query.append("&vnp_SecureHash=").append(secureHash);
+        log.info("VNPay payment URL created for order: {}, amount: {}", orderId, amount);
         return vnpUrl + "?" + query;
     }
 
     public boolean verifyReturn(Map<String, String> params) {
         String secureHash = params.get("vnp_SecureHash");
-        if (secureHash == null) return false;
+        if (secureHash == null) {
+            log.warn("VNPay verify called with no secure hash");
+            return false;
+        }
 
         Map<String, String> verifyParams = new TreeMap<>(params);
         verifyParams.remove("vnp_SecureHash");
@@ -77,7 +83,13 @@ public class VNPayService {
             }
         }
 
-        return hmacSHA512(hashSecret, hashData.toString()).equalsIgnoreCase(secureHash);
+        boolean valid = hmacSHA512(hashSecret, hashData.toString()).equalsIgnoreCase(secureHash);
+        if (valid) {
+            log.info("VNPay payment verified for order: {}", params.get("vnp_TxnRef"));
+        } else {
+            log.warn("VNPay signature mismatch for order: {}", params.get("vnp_TxnRef"));
+        }
+        return valid;
     }
 
     private String hmacSHA512(String key, String data) {

@@ -4,6 +4,7 @@ import com.example.backend.dto.order.OrderDetailResponse;
 import com.example.backend.dto.order.OrderRequest;
 import com.example.backend.dto.order.OrderResponse;
 import com.example.backend.service.OrderService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +20,7 @@ public class OrderController {
     private final OrderService orderService;
 
     @PostMapping
-    public ResponseEntity<OrderResponse> createOrder(@RequestBody OrderRequest request) {
+    public ResponseEntity<OrderResponse> createOrder(@Valid @RequestBody OrderRequest request) {
         return ResponseEntity.ok(orderService.createOrder(request));
     }
 
