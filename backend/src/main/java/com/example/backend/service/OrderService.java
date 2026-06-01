@@ -116,11 +116,13 @@ public class OrderService {
         Page<Order> orderPage = orderRepository.findByUserOrderByCreatedAtDesc(
                 user, PageRequest.of(page, size));
 
-        List<OrderDetailResponse> orders = orderPage.getContent().stream()
-                .map(order -> {
-                    Payment payment = paymentRepository.findByOrder(order).orElse(null);
-                    return toDetailResponse(order, payment);
-                })
+        List<Order> pageOrders = orderPage.getContent();
+        Map<UUID, Payment> paymentsByOrderId = paymentRepository.findByOrderIn(pageOrders)
+                .stream()
+                .collect(Collectors.toMap(p -> p.getOrder().getOrderId(), p -> p));
+
+        List<OrderDetailResponse> orders = pageOrders.stream()
+                .map(order -> toDetailResponse(order, paymentsByOrderId.get(order.getOrderId())))
                 .collect(Collectors.toList());
 
         return Map.of(
