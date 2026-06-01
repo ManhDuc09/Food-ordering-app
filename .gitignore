@@ -12,6 +12,7 @@ backend/*.jar
 .vscode/
 .idea/
 
+.claude/settings.json
 .claude/settings.local.json
 
 .DS_Store

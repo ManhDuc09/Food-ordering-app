@@ -33,7 +33,7 @@ public class UserService {
 
     public void changePassword(ChangePasswordRequest request) {
         User user = currentUser();
-        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPasswordHash())) {
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
             throw new RuntimeException("Mật khẩu hiện tại không đúng.");
         }
         if (request.getNewPassword() == null || request.getNewPassword().length() < 6) {
