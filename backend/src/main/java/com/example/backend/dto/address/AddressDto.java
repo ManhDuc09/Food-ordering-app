@@ -10,4 +10,6 @@ public class AddressDto {
     private String street;
     private String city;
     private Boolean isDefault;
+    private Double latitude;
+    private Double longitude;
 }

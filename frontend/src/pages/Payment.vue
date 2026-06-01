@@ -221,16 +221,37 @@
                 Cổng thanh toán <strong>MoMo</strong> đang được tích hợp. Đơn hàng sẽ được đặt và thanh toán xác nhận sau.
               </div>
 
-              <div class="rounded-3xl border border-gray-200 bg-gray-50 p-6">
-                <div class="flex justify-between text-gray-600">
+              <div class="rounded-3xl border border-gray-200 bg-gray-50 p-6 space-y-3">
+                <div class="flex justify-between text-gray-600 text-sm">
                   <span>Tổng số món</span>
                   <span>{{ totalQuantity }}</span>
                 </div>
-                <div class="mt-3 flex justify-between text-gray-600">
-                  <span>Tổng giá</span>
+                <div class="flex justify-between text-gray-600 text-sm">
+                  <span>Tiền hàng</span>
                   <span>{{ formatPrice(totalPrice) }}</span>
                 </div>
+
+                <!-- Shipping -->
+                <div class="flex justify-between text-sm" :class="shippingFee === -1 ? 'text-red-500' : 'text-gray-600'">
+                  <span class="flex items-center gap-1">
+                    Phí giao hàng
+                    <span v-if="deliveryDistance !== null" class="text-xs text-gray-400">(~{{ deliveryDistance.toFixed(1) }}km)</span>
+                  </span>
+                  <span v-if="calculatingShipping" class="text-xs text-gray-400 animate-pulse">Đang tính...</span>
+                  <span v-else-if="shippingFee === -1" class="font-semibold">Ngoài phạm vi</span>
+                  <span v-else-if="!selectedBranch || !form.address" class="text-xs text-gray-400">Chọn địa chỉ & chi nhánh</span>
+                  <span v-else>{{ formatPrice(shippingFee) }}</span>
+                </div>
+
+                <div class="border-t border-gray-200 pt-3 flex justify-between font-bold text-gray-800">
+                  <span>Tổng thanh toán</span>
+                  <span class="text-[#E4002B]">{{ formatPrice(totalWithShipping) }}</span>
+                </div>
               </div>
+
+              <p v-if="shippingFee === -1" class="text-sm text-red-600 font-semibold text-center">
+                Địa chỉ quá xa chi nhánh (tối đa 15km). Vui lòng chọn chi nhánh gần hơn.
+              </p>
 
               <button type="submit" class="w-full bg-red-600 text-white py-3 rounded-full font-bold hover:bg-red-700 transition-all">
                 Xác nhận thanh toán
@@ -345,6 +366,86 @@ const cartItems = computed(() => cartState.items)
 const totalQuantity = computed(() => cartItems.value.reduce((sum, item) => sum + item.quantity, 0))
 const totalPrice = computed(() => cartItems.value.reduce((sum, item) => sum + item.price * item.quantity, 0))
 
+// ── Shipping ────────────────────────────────────────────────
+const shippingFee = ref(0)
+const deliveryDistance = ref(null)
+const calculatingShipping = ref(false)
+
+const SHIPPING_TIERS = [
+  { maxKm: 3,  fee: 15000 },
+  { maxKm: 6,  fee: 25000 },
+  { maxKm: 10, fee: 35000 },
+  { maxKm: 15, fee: 45000 },
+]
+
+const totalWithShipping = computed(() =>
+  totalPrice.value + (shippingFee.value > 0 ? shippingFee.value : 0)
+)
+
+function haversine(lat1, lng1, lat2, lng2) {
+  const R = 6371
+  const toRad = d => d * Math.PI / 180
+  const dLat = toRad(lat2 - lat1)
+  const dLng = toRad(lng2 - lng1)
+  const a = Math.sin(dLat / 2) ** 2 +
+            Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+}
+
+async function geocodeAddress(address) {
+  const res = await fetch(
+    `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address + ', Việt Nam')}&format=json&limit=1`,
+    { headers: { 'Accept-Language': 'vi' } }
+  )
+  const data = await res.json()
+  if (!data.length) return null
+  return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) }
+}
+
+let shippingTimer = null
+async function calculateShipping() {
+  if (!selectedBranch.value?.latitude || !form.value.address) {
+    shippingFee.value = 0
+    deliveryDistance.value = null
+    return
+  }
+  calculatingShipping.value = true
+  try {
+   
+    const savedAddr = savedAddresses.value.find(a => a.id === selectedAddressId.value)
+    const coords = (savedAddr?.latitude && savedAddr?.longitude)
+      ? { lat: savedAddr.latitude, lng: savedAddr.longitude }
+      : await geocodeAddress(form.value.address)
+    if (!coords) { shippingFee.value = 15000; deliveryDistance.value = null; return }
+
+    const dist = haversine(
+      Number(selectedBranch.value.latitude), Number(selectedBranch.value.longitude),
+      coords.lat, coords.lng
+    )
+    deliveryDistance.value = dist
+
+    if (dist > 15) {
+      shippingFee.value = -1
+    } else {
+      shippingFee.value = (SHIPPING_TIERS.find(t => dist <= t.maxKm) ?? SHIPPING_TIERS.at(-1)).fee
+    }
+  } catch {
+    shippingFee.value = 15000
+  } finally {
+    calculatingShipping.value = false
+  }
+}
+
+watch(selectedBranch, () => {
+  clearTimeout(shippingTimer)
+  shippingTimer = setTimeout(calculateShipping, 300)
+})
+
+watch(() => form.value.address, () => {
+  clearTimeout(shippingTimer)
+  shippingTimer = setTimeout(calculateShipping, 800)
+})
+
 const formatPrice = (value) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value).replace('₫', 'đ')
 
@@ -377,7 +478,8 @@ const validateForm = () => {
     fieldErrors.value.fullName,
     fieldErrors.value.phone,
     fieldErrors.value.address,
-    !form.value.branchId ? 'Vui lòng chọn cửa hàng.' : ''
+    !form.value.branchId ? 'Vui lòng chọn cửa hàng.' : '',
+    shippingFee.value === -1 ? 'Địa chỉ quá xa chi nhánh (tối đa 15km).' : ''
   ].filter(Boolean)
 
   if (errors.length > 0) {
@@ -403,7 +505,7 @@ const submitPayment = async () => {
       phone: form.value.phone,
       address: form.value.address,
       branchId: form.value.branchId,
-      totalAmount: totalPrice.value
+      totalAmount: totalWithShipping.value
     }
 
     const result = await orderApi.createOrder(orderPayload)

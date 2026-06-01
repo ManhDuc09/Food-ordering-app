@@ -19,7 +19,9 @@ CREATE TABLE IF NOT EXISTS addresses (
     user_id UUID REFERENCES users(user_id) ON DELETE CASCADE,
     street TEXT NOT NULL,
     city VARCHAR(100),
-    is_default BOOLEAN DEFAULT false
+    is_default BOOLEAN DEFAULT false,
+    latitude NUMERIC(10,7),
+    longitude NUMERIC(10,7)
 );
 
 CREATE TABLE IF NOT EXISTS branches (

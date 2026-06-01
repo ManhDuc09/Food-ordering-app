@@ -261,9 +261,30 @@
     <!-- Address Modal -->
     <div v-if="showAddressModal" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4"
       @click.self="closeAddressModal">
-      <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
+      <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl max-h-[90vh] overflow-y-auto">
         <h3 class="text-lg font-bold mb-4">{{ editingAddress ? 'Sửa địa chỉ' : 'Thêm địa chỉ' }}</h3>
         <div class="space-y-3">
+
+          <!-- Map picker -->
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="text-sm text-gray-500">Chọn vị trí trên bản đồ</label>
+              <button type="button" @click="locateMe"
+                class="text-xs text-red-600 font-semibold hover:underline flex items-center gap-1">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                Vị trí của tôi
+              </button>
+            </div>
+            <div ref="addressMapEl" class="w-full h-44 rounded-xl border border-gray-200 overflow-hidden"></div>
+            <p class="text-xs text-gray-400 mt-1 text-center">
+              <span v-if="geocoding">Đang tìm địa chỉ...</span>
+              <span v-else>Nhấn vào bản đồ để tự động điền địa chỉ</span>
+            </p>
+          </div>
+
           <div>
             <label class="text-sm text-gray-500 block mb-1">Địa chỉ (đường, số nhà)</label>
             <input v-model="addressForm.street" type="text" placeholder="Ví dụ: 123 Nguyễn Huệ"
@@ -319,9 +340,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { profileApi } from '../api/profile'
 import { showToast } from '../store/toast'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
 
 const tabs = [
   { key: 'info', label: 'Thông tin cá nhân' },
@@ -347,7 +370,11 @@ const showAddressModal = ref(false)
 const editingAddress = ref(null)
 const savingAddress = ref(false)
 const addressError = ref('')
-const addressForm = ref({ street: '', city: '' })
+const addressMapEl = ref(null)
+const addressMapInstance = ref(null)
+const addressMarker = ref(null)
+const geocoding = ref(false)
+const addressForm = ref({ street: '', city: '', latitude: null, longitude: null })
 
 const showChangeMethodModal = ref(false)
 const changingOrder = ref(null)
@@ -443,22 +470,95 @@ async function saveProfile() {
   }
 }
 
-// --- Addresses ---
-function openAddAddress() {
+// --- Address map ---
+async function initAddressMap() {
+  await nextTick()
+  if (!addressMapEl.value) return
+
+  const map = L.map(addressMapEl.value).setView([10.7626, 106.6602], 13)
+  addressMapInstance.value = map
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap'
+  }).addTo(map)
+
+  map.on('click', async ({ latlng }) => {
+    placeMarker(map, latlng.lat, latlng.lng)
+    addressForm.value.latitude = latlng.lat
+    addressForm.value.longitude = latlng.lng
+    await reverseGeocode(latlng.lat, latlng.lng)
+  })
+}
+
+function placeMarker(map, lat, lng) {
+  if (addressMarker.value) {
+    addressMarker.value.setLatLng([lat, lng])
+  } else {
+    addressMarker.value = L.marker([lat, lng]).addTo(map)
+  }
+}
+
+async function reverseGeocode(lat, lng) {
+  geocoding.value = true
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
+      { headers: { 'Accept-Language': 'vi' } }
+    )
+    const data = await res.json()
+    const a = data.address || {}
+    const street = [a.house_number, a.road || a.pedestrian || a.path].filter(Boolean).join(' ')
+    const city = a.city || a.town || a.village || a.county || ''
+    if (street) addressForm.value.street = street
+    if (city) addressForm.value.city = city
+  } catch {}
+  finally { geocoding.value = false }
+}
+
+function locateMe() {
+  if (!navigator.geolocation) { showToast('Trình duyệt không hỗ trợ định vị.', 'error'); return }
+  navigator.geolocation.getCurrentPosition(
+    async ({ coords }) => {
+      const { latitude: lat, longitude: lng } = coords
+      const map = addressMapInstance.value
+      if (map) {
+        map.setView([lat, lng], 16)
+        placeMarker(map, lat, lng)
+      }
+      addressForm.value.latitude = lat
+      addressForm.value.longitude = lng
+      await reverseGeocode(lat, lng)
+    },
+    () => showToast('Không thể lấy vị trí của bạn.', 'error')
+  )
+}
+
+
+async function openAddAddress() {
   editingAddress.value = null
-  addressForm.value = { street: '', city: '' }
+  addressForm.value = { street: '', city: '', latitude: null, longitude: null }
   addressError.value = ''
+  addressMarker.value = null
   showAddressModal.value = true
+  initAddressMap()
 }
 
-function openEditAddress(addr) {
+async function openEditAddress(addr) {
   editingAddress.value = addr
-  addressForm.value = { street: addr.street, city: addr.city || '' }
+  addressForm.value = { street: addr.street, city: addr.city || '', latitude: addr.latitude || null, longitude: addr.longitude || null }
   addressError.value = ''
+  addressMarker.value = null
   showAddressModal.value = true
+  initAddressMap()
 }
 
-function closeAddressModal() { showAddressModal.value = false }
+function closeAddressModal() {
+  if (addressMapInstance.value) {
+    addressMapInstance.value.remove()
+    addressMapInstance.value = null
+  }
+  showAddressModal.value = false
+}
 
 async function saveAddress() {
   if (!addressForm.value.street.trim()) {
