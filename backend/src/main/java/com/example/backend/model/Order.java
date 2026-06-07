@@ -1,5 +1,6 @@
 package com.example.backend.model;
 
+import com.example.backend.enums.OrderStatus;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -33,7 +34,7 @@ public class Order {
     private Branch branch;
 
     @Column(name = "status")
-    private String status = "pending";
+    private String status = OrderStatus.PENDING.value;
 
     @Column(name = "total_amount", nullable = false)
     private BigDecimal totalAmount;

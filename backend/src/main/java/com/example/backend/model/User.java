@@ -1,5 +1,6 @@
 package com.example.backend.model;
 
+import com.example.backend.enums.UserRole;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Data;
@@ -36,7 +37,7 @@ public class User implements UserDetails {
     private String passwordHash;
 
     @Column
-    private String role = "customer";
+    private String role = UserRole.CUSTOMER.value;
 
 
     @ManyToOne(fetch = FetchType.LAZY)

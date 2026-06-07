@@ -15,6 +15,7 @@ import com.example.backend.repository.PaymentRepository;
 import com.example.backend.repository.ProductRepository;
 import com.example.backend.repository.UserRepository;
 import com.example.backend.enums.OrderStatus;
+import com.example.backend.enums.PaymentMethod;
 import com.example.backend.enums.PaymentStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -100,7 +101,7 @@ public class OrderService {
 
         Payment payment = new Payment();
         payment.setOrder(savedOrder);
-        payment.setMethod(request.getPaymentMethod() != null ? request.getPaymentMethod().toUpperCase() : "COD");
+        payment.setMethod(request.getPaymentMethod() != null ? request.getPaymentMethod().toUpperCase() : PaymentMethod.COD.value);
         payment.setStatus(PaymentStatus.PENDING.value);
         payment.setPaidAt(null);
         paymentRepository.save(payment);
@@ -150,8 +151,8 @@ public class OrderService {
 
         log.info("Updating payment method for order {} to {}", orderId, newMethod);
         payment.setMethod(newMethod.toUpperCase());
-        payment.setStatus("COD".equals(payment.getMethod()) ? PaymentStatus.PAID.value : PaymentStatus.PENDING.value);
-        if ("COD".equals(payment.getMethod())) {
+        payment.setStatus(PaymentMethod.COD.value.equals(payment.getMethod()) ? PaymentStatus.PAID.value : PaymentStatus.PENDING.value);
+        if (PaymentMethod.COD.value.equals(payment.getMethod())) {
             payment.setPaidAt(LocalDateTime.now());
         }
         paymentRepository.save(payment);
