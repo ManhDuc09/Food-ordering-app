@@ -94,6 +94,9 @@ public class OrderService {
         }
 
         order.setItems(items);
+        if (request.getShippingFee() != null && request.getShippingFee().compareTo(BigDecimal.ZERO) > 0) {
+            totalAmount = totalAmount.add(request.getShippingFee());
+        }
         order.setTotalAmount(totalAmount);
 
         Order savedOrder = orderRepository.save(order);

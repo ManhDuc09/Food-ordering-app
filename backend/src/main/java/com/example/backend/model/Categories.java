@@ -31,6 +31,9 @@ public class Categories {
     @Column(name = "name")
     private String name;
 
+    @Column(name = "image_url")
+    private String imageUrl;
+
     @ManyToMany(mappedBy = "categories")
     @JsonIgnoreProperties("categories") 
     private Set<Product> products;

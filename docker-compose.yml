@@ -10,15 +10,22 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./db/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+      - ./db/seed.sql:/docker-entrypoint-initdb.d/seed.sql
     networks:
       - app-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   api-service:
     build: ./backend
     ports:
       - "8080:8080"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     volumes:
       - ./backend/src:/app/src        # 👈 mount source code
       - ./backend/pom.xml:/app/pom.xml

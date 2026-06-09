@@ -1,109 +1,110 @@
--- Enable UUID support
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+-- KFCClone Database Schema
 
--- ==========================================
--- 1. USER & LOCATION MANAGEMENT
--- ==========================================
-CREATE TABLE IF NOT EXISTS users (
-    user_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA public;
+
+-- Users
+CREATE TABLE users (
+    user_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     full_name VARCHAR(255) NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
     phone_number VARCHAR(20),
     password_hash TEXT NOT NULL,
     role VARCHAR(50) DEFAULT 'customer',
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    branch_id UUID
 );
 
-CREATE TABLE IF NOT EXISTS addresses (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID REFERENCES users(user_id) ON DELETE CASCADE,
-    street TEXT NOT NULL,
-    city VARCHAR(100),
-    is_default BOOLEAN DEFAULT false,
-    latitude NUMERIC(10,7),
-    longitude NUMERIC(10,7)
-);
-
-CREATE TABLE IF NOT EXISTS branches (
-    branch_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+-- Branches
+CREATE TABLE branches (
+    branch_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     address TEXT,
-    latitude DECIMAL(9,6),
-    longitude DECIMAL(9,6),
-    is_open BOOLEAN DEFAULT true
+    is_open BOOLEAN DEFAULT true,
+    latitude NUMERIC(9,6),
+    longitude NUMERIC(9,6)
 );
 
--- ==========================================
--- 2. THE MENU (Simplified Version)
--- ==========================================
-CREATE TABLE IF NOT EXISTS categories (
-    category_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR(100) NOT NULL
+-- Categories
+CREATE TABLE categories (
+    category_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    image_url TEXT
 );
 
-CREATE TABLE IF NOT EXISTS products (
-    product_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+-- Products
+CREATE TABLE products (
+    product_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     description TEXT,
     image_url TEXT,
-    price DECIMAL(12,2) DEFAULT 0,
+    price NUMERIC(12,2) DEFAULT 0,
     is_available BOOLEAN DEFAULT true,
     priority INT DEFAULT 0
 );
 
--- The "Link" table for Many-to-Many
-CREATE TABLE IF NOT EXISTS product_categories (
-    product_id UUID REFERENCES products(product_id) ON DELETE CASCADE,
-    category_id UUID REFERENCES categories(category_id) ON DELETE CASCADE,
+-- Product ↔ Category (many-to-many)
+CREATE TABLE product_categories (
+    product_id UUID NOT NULL REFERENCES products(product_id) ON DELETE CASCADE,
+    category_id UUID NOT NULL REFERENCES categories(category_id) ON DELETE CASCADE,
     PRIMARY KEY (product_id, category_id)
 );
 
-CREATE TABLE IF NOT EXISTS add_ons (
-    add_on_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+-- Add-ons
+CREATE TABLE add_ons (
+    add_on_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
-    price DECIMAL(10, 2) NOT NULL
+    price NUMERIC(10,2) NOT NULL
 );
 
--- ==========================================
--- 3. ORDERS & PAYMENTS
--- ==========================================
-CREATE TABLE IF NOT EXISTS orders (
-    order_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+-- Addresses
+CREATE TABLE addresses (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id UUID REFERENCES users(user_id) ON DELETE CASCADE,
+    street TEXT NOT NULL,
+    city VARCHAR(100),
+    is_default BOOLEAN DEFAULT false,
+    latitude DOUBLE PRECISION,
+    longitude DOUBLE PRECISION
+);
+
+-- Orders
+CREATE TABLE orders (
+    order_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id UUID REFERENCES users(user_id) ON DELETE SET NULL,
     branch_id UUID REFERENCES branches(branch_id),
     status VARCHAR(50) DEFAULT 'pending',
-    total_amount DECIMAL(10, 2) NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    total_amount NUMERIC(10,2) NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    delivery_name VARCHAR(255),
+    delivery_phone VARCHAR(20),
+    delivery_address TEXT
 );
 
-CREATE TABLE IF NOT EXISTS order_items (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+-- Order Items
+CREATE TABLE order_items (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     order_id UUID REFERENCES orders(order_id) ON DELETE CASCADE,
-    product_id UUID REFERENCES products(product_id), -- Linked directly now (no variants)
-    quantity INT NOT NULL DEFAULT 1
+    product_id UUID REFERENCES products(product_id),
+    variant_id UUID,
+    quantity INT DEFAULT 1 NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS order_customizations (
-    order_item_id UUID REFERENCES order_items(id) ON DELETE CASCADE,
-    add_on_id UUID REFERENCES add_ons(add_on_id) ON DELETE CASCADE,
+-- Order Item ↔ Add-on (many-to-many)
+CREATE TABLE order_customizations (
+    order_item_id UUID NOT NULL REFERENCES order_items(id) ON DELETE CASCADE,
+    add_on_id UUID NOT NULL REFERENCES add_ons(add_on_id) ON DELETE CASCADE,
     PRIMARY KEY (order_item_id, add_on_id)
 );
 
-CREATE TABLE IF NOT EXISTS payments (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+-- Payments
+CREATE TABLE payments (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     order_id UUID UNIQUE REFERENCES orders(order_id) ON DELETE CASCADE,
     method VARCHAR(50),
     status VARCHAR(50),
-    paid_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    paid_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
-ALTER TABLE order_items
-ADD COLUMN product_id UUID REFERENCES products(product_id);
-
--- Add delivery info to orders
-ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_name VARCHAR(255);
-ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_phone VARCHAR(20);
-ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_address TEXT;
-
--- Link managers to their branch
-ALTER TABLE users ADD COLUMN IF NOT EXISTS branch_id UUID REFERENCES branches(branch_id);
+-- Foreign key: users → branches
+ALTER TABLE users ADD CONSTRAINT users_branch_id_fkey
+    FOREIGN KEY (branch_id) REFERENCES branches(branch_id);

@@ -37,6 +37,8 @@ public class AddressService {
         address.setUser(user);
         address.setStreet(dto.getStreet());
         address.setCity(dto.getCity());
+        address.setLatitude(dto.getLatitude());
+        address.setLongitude(dto.getLongitude());
         address.setIsDefault(false);
         AddressDto saved = toDto(addressRepository.save(address));
         log.info("Address added for user: {}", user.getEmail());
@@ -49,6 +51,8 @@ public class AddressService {
         Address address = findOwnedAddress(id, user);
         address.setStreet(dto.getStreet());
         address.setCity(dto.getCity());
+        address.setLatitude(dto.getLatitude());
+        address.setLongitude(dto.getLongitude());
         log.info("Address {} updated for user: {}", id, user.getEmail());
         return toDto(addressRepository.save(address));
     }
@@ -92,6 +96,8 @@ public class AddressService {
         dto.setStreet(address.getStreet());
         dto.setCity(address.getCity());
         dto.setIsDefault(address.getIsDefault());
+        dto.setLatitude(address.getLatitude());
+        dto.setLongitude(address.getLongitude());
         return dto;
     }
 }

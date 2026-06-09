@@ -13,6 +13,7 @@ public class OrderRequest {
     @NotNull
     private List<OrderItemRequest> items;
     private BigDecimal totalAmount;
+    private BigDecimal shippingFee;
     private String paymentMethod;
     @NotBlank
     private String fullName;

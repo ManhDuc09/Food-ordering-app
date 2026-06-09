@@ -25,7 +25,8 @@ export const adminApi = {
   updateProduct: (productId, data) => req(`${BASE}/products/${productId}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteProduct: (productId) => req(`${BASE}/products/${productId}`, { method: 'DELETE' }),
 
-  createCategory: (name) => req(`${BASE}/categories`, { method: 'POST', body: JSON.stringify({ name }) }),
+  createCategory: (data) => req(`${BASE}/categories`, { method: 'POST', body: JSON.stringify(data) }),
+  updateCategory: (categoryId, data) => req(`${BASE}/categories/${categoryId}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteCategory: (categoryId) => req(`${BASE}/categories/${categoryId}`, { method: 'DELETE' }),
 
   createBranch: (data) => req(`${BASE}/branches`, { method: 'POST', body: JSON.stringify(data) }),

@@ -108,10 +108,29 @@ public class AdminService {
 
     // --- Category Management ---
 
+    @Transactional(readOnly = true)
+    public List<CategoriesResponse> getAllCategories() {
+        return categoriesRepository.findAll().stream()
+                .map(categoriesMapper::categoriesToResponse)
+                .collect(Collectors.toList());
+    }
+
     @Transactional
     public CategoriesResponse createCategory(CategoriesRequest request) {
         Categories category = new Categories();
         category.setName(request.getName());
+        category.setImageUrl(request.getImageUrl());
+        return categoriesMapper.categoriesToResponse(categoriesRepository.save(category));
+    }
+
+    @Transactional
+    public CategoriesResponse updateCategory(UUID categoryId, CategoriesRequest request) {
+        Categories category = categoriesRepository.findById(categoryId)
+                .orElseThrow(() -> new RuntimeException("Category not found"));
+
+        if (request.getName() != null) category.setName(request.getName());
+        if (request.getImageUrl() != null) category.setImageUrl(request.getImageUrl());
+
         return categoriesMapper.categoriesToResponse(categoriesRepository.save(category));
     }
 

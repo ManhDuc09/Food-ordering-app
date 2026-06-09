@@ -167,8 +167,7 @@
               <p class="text-xs text-gray-400 font-mono">{{ order.orderId.slice(0, 8).toUpperCase() }}</p>
             </div>
             <div class="flex items-center gap-2 flex-wrap justify-end">
-              <!-- Payment status badge -->
-              <span v-if="order.paymentStatus === 'pending' && order.paymentMethod !== 'COD'"
+              <span v-if="order.paymentStatus === PaymentStatus.PENDING"
                 class="text-xs font-semibold px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700">
                 Chưa thanh toán
               </span>
@@ -176,13 +175,12 @@
                 class="text-xs font-semibold px-2 py-0.5 rounded-full bg-green-100 text-green-700">
                 Đã thanh toán
               </span>
-              <!-- Order status badge -->
               <span class="text-xs font-semibold px-2 py-0.5 rounded-full"
                 :class="{
-                  'bg-gray-100 text-gray-600': order.status === 'pending',
-                  'bg-blue-100 text-blue-600': order.status === 'confirmed',
-                  'bg-green-100 text-green-700': order.status === 'delivered',
-                  'bg-red-100 text-red-600': order.status === 'cancelled'
+                  'bg-gray-100 text-gray-600': order.status === OrderStatus.PENDING,
+                  'bg-blue-100 text-blue-600': order.status === OrderStatus.CONFIRMED,
+                  'bg-green-100 text-green-700': order.status === OrderStatus.DELIVERED,
+                  'bg-red-100 text-red-600': order.status === OrderStatus.CANCELLED,
                 }">
                 {{ orderStatusLabel(order.status) }}
               </span>
@@ -191,25 +189,19 @@
 
           <!-- Items -->
           <ul class="space-y-1 text-sm border-t border-gray-50 pt-3">
-            <li v-for="(item, i) in order.items" :key="i" class="flex justify-between text-gray-700">
-              <span>{{ item.productName }} × {{ item.quantity }}</span>
-              <span class="font-medium">{{ formatPrice(item.price * item.quantity) }}</span>
+            <li v-for="(item, i) in order.items" :key="i" class="text-gray-700">
+              {{ item.productName }} × {{ item.quantity }}
             </li>
           </ul>
 
           <!-- Delivery + Branch info -->
           <div class="border-t border-gray-100 pt-3 space-y-1 text-xs text-gray-500">
-            <div v-if="order.deliveryName || order.deliveryPhone" class="flex items-center gap-1">
-              <span>👤</span>
-              <span>{{ order.deliveryName }}<span v-if="order.deliveryPhone"> · {{ order.deliveryPhone }}</span></span>
+            <div v-if="order.deliveryName || order.deliveryPhone">
+              {{ order.deliveryName }}<span v-if="order.deliveryPhone"> · {{ order.deliveryPhone }}</span>
             </div>
-            <div v-if="order.deliveryAddress" class="flex items-start gap-1">
-              <span class="shrink-0">📍</span>
-              <span>{{ order.deliveryAddress }}</span>
-            </div>
-            <div v-if="order.branchName" class="flex items-start gap-1">
-              <span class="shrink-0">🏪</span>
-              <span>{{ order.branchName }}<span v-if="order.branchAddress" class="text-gray-400"> · {{ order.branchAddress }}</span></span>
+            <div v-if="order.deliveryAddress">{{ order.deliveryAddress }}</div>
+            <div v-if="order.branchName">
+              {{ order.branchName }}<span v-if="order.branchAddress" class="text-gray-400"> · {{ order.branchAddress }}</span>
             </div>
           </div>
 
@@ -222,7 +214,7 @@
           </div>
 
           <!-- Cancel button -->
-          <div v-if="order.status !== 'cancelled' && order.status !== 'delivered'">
+          <div v-if="order.status !== OrderStatus.CANCELLED && order.status !== OrderStatus.DELIVERED">
             <button @click="cancelOrder(order)"
               :disabled="cancellingId === order.orderId"
               class="w-full text-sm font-semibold text-gray-500 border border-gray-200 rounded-xl py-2 hover:bg-gray-50 disabled:opacity-50 transition-colors">
@@ -231,10 +223,10 @@
           </div>
 
           <!-- Action buttons for pending non-COD orders -->
-          <div v-if="order.status !== 'cancelled' && order.paymentStatus === 'pending' && order.paymentMethod !== 'COD'"
+          <div v-if="order.status !== OrderStatus.CANCELLED && order.paymentStatus === PaymentStatus.PENDING && order.paymentMethod !== PaymentMethod.COD"
             class="flex gap-2">
             <button
-              v-if="order.paymentMethod === 'VNPAY'"
+              v-if="order.paymentMethod === PaymentMethod.VNPAY"
               @click="repay(order)"
               :disabled="repayingId === order.orderId"
               class="flex-1 text-sm font-semibold text-white bg-[#E4002B] rounded-xl py-2 hover:bg-red-700 disabled:opacity-50 transition-colors">
@@ -261,14 +253,14 @@
     <!-- Address Modal -->
     <div v-if="showAddressModal" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4"
       @click.self="closeAddressModal">
-      <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl max-h-[90vh] overflow-y-auto">
+      <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
         <h3 class="text-lg font-bold mb-4">{{ editingAddress ? 'Sửa địa chỉ' : 'Thêm địa chỉ' }}</h3>
         <div class="space-y-3">
 
-          <!-- Map picker -->
+          <!-- Map search + locate -->
           <div>
             <div class="flex items-center justify-between mb-1">
-              <label class="text-sm text-gray-500">Chọn vị trí trên bản đồ</label>
+              <label class="text-sm text-gray-500">Tìm trên bản đồ</label>
               <button type="button" @click="locateMe"
                 class="text-xs text-red-600 font-semibold hover:underline flex items-center gap-1">
                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -278,6 +270,39 @@
                 Vị trí của tôi
               </button>
             </div>
+
+            <!-- Search box -->
+            <div class="relative mb-2">
+              <input
+                v-model="mapSearch"
+                type="text"
+                placeholder="Tìm địa chỉ..."
+                autocomplete="off"
+                class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-400 pr-8"
+                @input="onMapSearchInput"
+                @blur="hideMapDropdownDelayed"
+              />
+              <svg v-if="!mapSearching" class="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
+                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" />
+              </svg>
+              <svg v-else class="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 animate-spin"
+                fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+              </svg>
+              <div v-if="mapSuggestions.length > 0"
+                class="absolute z-20 top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg mt-1 max-h-44 overflow-y-auto">
+                <button
+                  v-for="(s, i) in mapSuggestions" :key="i"
+                  type="button"
+                  @mousedown.prevent="selectMapSuggestion(s)"
+                  class="w-full text-left px-3 py-2 text-xs hover:bg-red-50 border-b border-gray-100 last:border-0 text-gray-700">
+                  {{ s.display_name }}
+                </button>
+              </div>
+            </div>
+
             <div ref="addressMapEl" class="w-full h-44 rounded-xl border border-gray-200 overflow-hidden"></div>
             <p class="text-xs text-gray-400 mt-1 text-center">
               <span v-if="geocoding">Đang tìm địa chỉ...</span>
@@ -285,16 +310,44 @@
             </p>
           </div>
 
-          <div>
-            <label class="text-sm text-gray-500 block mb-1">Địa chỉ (đường, số nhà)</label>
-            <input v-model="addressForm.street" type="text" placeholder="Ví dụ: 123 Nguyễn Huệ"
-              class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-400" />
+          <!-- Address fields -->
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-sm text-gray-500 block mb-1">Số nhà</label>
+              <input v-model="addressForm.houseNumber" type="text" placeholder="VD: 12B"
+                class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-400" />
+            </div>
+            <div>
+              <label class="text-sm text-gray-500 block mb-1">Tên đường</label>
+              <input v-model="addressForm.road" type="text" placeholder="VD: Nguyễn Huệ"
+                class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-400" />
+            </div>
           </div>
-          <div>
-            <label class="text-sm text-gray-500 block mb-1">Thành phố</label>
-            <input v-model="addressForm.city" type="text" placeholder="Ví dụ: Hồ Chí Minh"
-              class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-400" />
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-sm text-gray-500 block mb-1">Phường / Xã</label>
+              <input v-model="addressForm.ward" type="text" placeholder="VD: Phường Bến Nghé"
+                class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-400" />
+            </div>
+            <div>
+              <label class="text-sm text-gray-500 block mb-1">Quận / Huyện</label>
+              <input v-model="addressForm.district" type="text" placeholder="VD: Quận 1"
+                class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-400" />
+            </div>
           </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-sm text-gray-500 block mb-1">Tỉnh / Thành phố</label>
+              <input v-model="addressForm.city" type="text" placeholder="VD: Hồ Chí Minh"
+                class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-400" />
+            </div>
+            <div>
+              <label class="text-sm text-gray-500 block mb-1">Chi tiết <span class="text-gray-400 font-normal">(tuỳ chọn)</span></label>
+              <input v-model="addressForm.detail" type="text" placeholder="VD: Tầng 5, Toà A"
+                class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-400" />
+            </div>
+          </div>
+
           <p v-if="addressError" class="text-red-500 text-xs">{{ addressError }}</p>
           <div class="flex gap-2 pt-1">
             <button @click="saveAddress" :disabled="savingAddress"
@@ -343,6 +396,7 @@
 import { ref, computed, onMounted, nextTick } from 'vue'
 import { profileApi } from '../api/profile'
 import { showToast } from '../store/toast'
+import { OrderStatus, PaymentStatus, PaymentMethod } from '../constants/enums'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
@@ -374,7 +428,12 @@ const addressMapEl = ref(null)
 const addressMapInstance = ref(null)
 const addressMarker = ref(null)
 const geocoding = ref(false)
-const addressForm = ref({ street: '', city: '', latitude: null, longitude: null })
+const addressForm = ref({ houseNumber: '', road: '', ward: '', district: '', detail: '', city: '', latitude: null, longitude: null })
+
+// Map search
+const mapSearch = ref('')
+const mapSuggestions = ref([])
+const mapSearching = ref(false)
 
 const showChangeMethodModal = ref(false)
 const changingOrder = ref(null)
@@ -388,9 +447,9 @@ const savingPassword = ref(false)
 const passwordForm = ref({ current: '', next: '', confirm: '' })
 
 const paymentMethods = [
-  { value: 'COD', icon: '🛵', label: 'Thanh toán khi nhận hàng', desc: 'Trả tiền mặt khi giao hàng' },
-  { value: 'MOMO', icon: '💜', label: 'MoMo', desc: 'Ví điện tử MoMo' },
-  { value: 'VNPAY', icon: '🏦', label: 'VNPay', desc: 'Thanh toán qua VNPay' }
+  { value: PaymentMethod.COD,   icon: '🛵', label: 'Thanh toán khi nhận hàng', desc: 'Trả tiền mặt khi giao hàng' },
+  { value: PaymentMethod.MOMO,  icon: '💜', label: 'MoMo', desc: 'Ví điện tử MoMo' },
+  { value: PaymentMethod.VNPAY, icon: '🏦', label: 'VNPay', desc: 'Thanh toán qua VNPay' },
 ]
 
 const initials = computed(() => {
@@ -436,9 +495,60 @@ async function loadMore() {
   }
 }
 
-// Watch tab changes to load orders on demand
 import { watch } from 'vue'
 watch(activeTab, val => { if (val === 'orders') onOrdersTabOpen() })
+
+// Forward geocode when address fields are typed manually
+let fieldGeoTimer = null
+watch(
+  [
+    () => addressForm.value.houseNumber,
+    () => addressForm.value.road,
+    () => addressForm.value.ward,
+    () => addressForm.value.district,
+    () => addressForm.value.city,
+  ],
+  () => {
+    clearTimeout(fieldGeoTimer)
+    const road = [addressForm.value.houseNumber, addressForm.value.road].filter(Boolean).join(' ')
+    if (!road.trim()) return
+    fieldGeoTimer = setTimeout(() => forwardGeocode(), 900)
+  }
+)
+
+let lastGeoQuery = ''
+async function forwardGeocode() {
+  const parts = [
+    [addressForm.value.houseNumber, addressForm.value.road].map(s => s?.trim()).filter(Boolean).join(' '),
+    addressForm.value.ward?.trim(),
+    addressForm.value.district?.trim(),
+    addressForm.value.city?.trim(),
+    'Việt Nam',
+  ].filter(Boolean)
+
+  if (!parts[0]) return
+  const q = parts.join(', ')
+  if (q === lastGeoQuery) return
+  lastGeoQuery = q
+
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`,
+      { headers: { 'Accept-Language': 'vi' } }
+    )
+    const data = await res.json()
+    if (!data.length) return
+    const lat = parseFloat(data[0].lat)
+    const lng = parseFloat(data[0].lon)
+    addressForm.value.latitude = lat
+    addressForm.value.longitude = lng
+    const map = addressMapInstance.value
+    if (map) {
+      map.setView([lat, lng], 16)
+      placeMarker(map, lat, lng)
+    }
+  } catch {}
+}
 
 // --- Profile ---
 function startEditProfile() {
@@ -470,6 +580,53 @@ async function saveProfile() {
   }
 }
 
+// --- Map search ---
+let mapSearchTimer = null
+
+function onMapSearchInput() {
+  clearTimeout(mapSearchTimer)
+  if (!mapSearch.value.trim() || mapSearch.value.length < 3) {
+    mapSuggestions.value = []
+    return
+  }
+  mapSearchTimer = setTimeout(fetchMapSuggestions, 400)
+}
+
+async function fetchMapSuggestions() {
+  mapSearching.value = true
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(mapSearch.value + ', Việt Nam')}&format=json&limit=5&addressdetails=1`,
+      { headers: { 'Accept-Language': 'vi' } }
+    )
+    mapSuggestions.value = await res.json()
+  } catch {
+    mapSuggestions.value = []
+  } finally {
+    mapSearching.value = false
+  }
+}
+
+function selectMapSuggestion(s) {
+  const lat = parseFloat(s.lat)
+  const lng = parseFloat(s.lon)
+  mapSuggestions.value = []
+  mapSearch.value = ''
+
+  const map = addressMapInstance.value
+  if (map) {
+    map.setView([lat, lng], 16)
+    placeMarker(map, lat, lng)
+  }
+  addressForm.value.latitude = lat
+  addressForm.value.longitude = lng
+  fillAddressFromNominatim(s.address || {})
+}
+
+function hideMapDropdownDelayed() {
+  setTimeout(() => { mapSuggestions.value = [] }, 150)
+}
+
 // --- Address map ---
 async function initAddressMap() {
   await nextTick()
@@ -498,6 +655,18 @@ function placeMarker(map, lat, lng) {
   }
 }
 
+function fillAddressFromNominatim(a) {
+  if (a.house_number) addressForm.value.houseNumber = a.house_number
+  const road = a.road || a.pedestrian || a.path || ''
+  if (road) addressForm.value.road = road
+  const ward = a.quarter || a.suburb || a.neighbourhood || ''
+  if (ward) addressForm.value.ward = ward
+  const district = a.city_district || a.county || ''
+  if (district) addressForm.value.district = district
+  const city = a.city || a.town || a.village || a.state || ''
+  if (city) addressForm.value.city = city
+}
+
 async function reverseGeocode(lat, lng) {
   geocoding.value = true
   try {
@@ -506,11 +675,7 @@ async function reverseGeocode(lat, lng) {
       { headers: { 'Accept-Language': 'vi' } }
     )
     const data = await res.json()
-    const a = data.address || {}
-    const street = [a.house_number, a.road || a.pedestrian || a.path].filter(Boolean).join(' ')
-    const city = a.city || a.town || a.village || a.county || ''
-    if (street) addressForm.value.street = street
-    if (city) addressForm.value.city = city
+    fillAddressFromNominatim(data.address || {})
   } catch {}
   finally { geocoding.value = false }
 }
@@ -533,21 +698,45 @@ function locateMe() {
   )
 }
 
+function buildStreet() {
+  return [addressForm.value.houseNumber, addressForm.value.road, addressForm.value.detail]
+    .map(s => s?.trim()).filter(Boolean).join(', ')
+}
+
+function buildCity() {
+  return [addressForm.value.ward, addressForm.value.district, addressForm.value.city]
+    .map(s => s?.trim()).filter(Boolean).join(', ')
+}
 
 async function openAddAddress() {
   editingAddress.value = null
-  addressForm.value = { street: '', city: '', latitude: null, longitude: null }
+  addressForm.value = { houseNumber: '', road: '', ward: '', district: '', detail: '', city: '', latitude: null, longitude: null }
+  mapSearch.value = ''
+  mapSuggestions.value = []
   addressError.value = ''
   addressMarker.value = null
+  lastGeoQuery = ''
   showAddressModal.value = true
   initAddressMap()
 }
 
 async function openEditAddress(addr) {
   editingAddress.value = addr
-  addressForm.value = { street: addr.street, city: addr.city || '', latitude: addr.latitude || null, longitude: addr.longitude || null }
+  addressForm.value = {
+    houseNumber: '',
+    road: addr.street || '',
+    ward: '',
+    district: '',
+    detail: '',
+    city: addr.city || '',
+    latitude: addr.latitude || null,
+    longitude: addr.longitude || null
+  }
+  mapSearch.value = ''
+  mapSuggestions.value = []
   addressError.value = ''
   addressMarker.value = null
+  lastGeoQuery = ''
   showAddressModal.value = true
   initAddressMap()
 }
@@ -557,24 +746,32 @@ function closeAddressModal() {
     addressMapInstance.value.remove()
     addressMapInstance.value = null
   }
+  mapSuggestions.value = []
   showAddressModal.value = false
 }
 
 async function saveAddress() {
-  if (!addressForm.value.street.trim()) {
-    showToast('Vui lòng nhập địa chỉ.', 'error'); return
+  const street = buildStreet()
+  if (!street) {
+    showToast('Vui lòng nhập ít nhất số nhà hoặc tên đường.', 'error'); return
   }
   savingAddress.value = true
   addressError.value = ''
   try {
+    const payload = {
+      street: buildStreet(),
+      city: buildCity(),
+      latitude: addressForm.value.latitude,
+      longitude: addressForm.value.longitude
+    }
     if (editingAddress.value) {
-      const updated = await profileApi.updateAddress(editingAddress.value.id, addressForm.value)
+      const updated = await profileApi.updateAddress(editingAddress.value.id, payload)
       const idx = addresses.value.findIndex(a => a.id === updated.id)
       if (idx !== -1) addresses.value[idx] = updated
     } else {
-      addresses.value.push(await profileApi.addAddress(addressForm.value))
+      addresses.value.push(await profileApi.addAddress(payload))
     }
-    showAddressModal.value = false
+    closeAddressModal()
     showToast(editingAddress.value ? 'Cập nhật địa chỉ thành công!' : 'Thêm địa chỉ thành công!')
   } catch {
     addressError.value = 'Lưu địa chỉ thất bại, thử lại sau'
@@ -693,7 +890,16 @@ const formatDate = iso => iso
   ? new Intl.DateTimeFormat('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(iso))
   : '—'
 
-const paymentMethodLabel = m => ({ COD: 'Tiền mặt khi nhận', MOMO: 'MoMo', VNPAY: 'VNPay' }[m] || m)
+const paymentMethodLabel = m => ({
+  [PaymentMethod.COD]:   'Tiền mặt khi nhận',
+  [PaymentMethod.MOMO]:  'MoMo',
+  [PaymentMethod.VNPAY]: 'VNPay',
+}[m] || m)
 
-const orderStatusLabel = s => ({ pending: 'Đang xử lý', confirmed: 'Đã xác nhận', delivered: 'Đã giao', cancelled: 'Đã hủy' }[s] || s)
+const orderStatusLabel = s => ({
+  [OrderStatus.PENDING]:   'Đang xử lý',
+  [OrderStatus.CONFIRMED]: 'Đã xác nhận',
+  [OrderStatus.DELIVERED]: 'Đã giao',
+  [OrderStatus.CANCELLED]: 'Đã hủy',
+}[s] || s)
 </script>

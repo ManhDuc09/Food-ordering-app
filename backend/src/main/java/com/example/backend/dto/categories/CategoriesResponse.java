@@ -8,4 +8,5 @@ import lombok.Data;
 public class CategoriesResponse {
     private UUID categoryId;
     private String name;
+    private String imageUrl;
 }

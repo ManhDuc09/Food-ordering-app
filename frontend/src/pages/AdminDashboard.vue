@@ -179,15 +179,9 @@
 
         <!-- Categories -->
         <div v-if="activeTab === 'categories'">
-          <div class="flex gap-3 mb-6">
-            <input
-              v-model="newCategoryName"
-              @keyup.enter="createCategory"
-              placeholder="Tên danh mục mới..."
-              class="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#E4002B]"
-            />
-            <button @click="createCategory" class="bg-[#E4002B] text-white px-5 py-2 rounded-lg text-sm font-bold hover:bg-red-700 transition-colors">
-              Thêm
+          <div class="flex justify-end mb-4">
+            <button @click="openCategoryModal(null)" class="bg-[#E4002B] text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-red-700 transition-colors">
+              + Thêm danh mục
             </button>
           </div>
           <div class="bg-white rounded-xl shadow-sm overflow-hidden">
@@ -195,8 +189,17 @@
               v-for="cat in categories" :key="cat.categoryId"
               class="flex items-center justify-between px-6 py-4 border-b last:border-0 hover:bg-gray-50"
             >
-              <span class="font-bold text-gray-900">{{ cat.name }}</span>
-              <button @click="confirmDelete('category', cat.categoryId)" class="text-red-500 font-bold text-xs hover:underline">Xóa</button>
+              <div class="flex items-center gap-3">
+                <img v-if="cat.imageUrl" :src="cat.imageUrl" class="w-10 h-10 object-cover rounded-lg border border-gray-200" @error="e => e.target.style.display='none'" />
+                <div v-else class="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-gray-300">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                </div>
+                <span class="font-bold text-gray-900">{{ cat.name }}</span>
+              </div>
+              <div class="flex gap-4">
+                <button @click="openCategoryModal(cat)" class="text-blue-600 font-bold text-sm hover:underline">Sửa</button>
+                <button @click="confirmDelete('category', cat.categoryId)" class="text-red-500 font-bold text-sm hover:underline">Xóa</button>
+              </div>
             </div>
             <div v-if="categories.length === 0" class="px-6 py-8 text-center text-gray-400 font-bold">Chưa có danh mục</div>
           </div>
@@ -342,6 +345,37 @@
       </div>
     </div>
 
+    <!-- Category Modal -->
+    <div v-if="categoryModal.open" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
+        <h3 class="font-black text-lg mb-5">{{ categoryModal.mode === 'create' ? 'Thêm danh mục' : 'Sửa danh mục' }}</h3>
+        <div class="space-y-4">
+          <div>
+            <label class="text-xs font-black text-gray-500 uppercase">Tên danh mục</label>
+            <input v-model="categoryModal.form.name" class="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-[#E4002B]" placeholder="Nhập tên danh mục..." />
+          </div>
+          <div>
+            <label class="text-xs font-black text-gray-500 uppercase">Hình ảnh (tuỳ chọn)</label>
+            <div class="mt-1">
+              <label class="inline-flex items-center gap-2 cursor-pointer border border-gray-300 rounded-lg px-4 py-2 text-sm font-bold text-gray-600 hover:bg-gray-50">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                {{ categoryImageUploading ? 'Đang tải...' : 'Tải lên' }}
+                <input type="file" accept="image/*" class="hidden" @change="uploadCategoryImage" :disabled="categoryImageUploading" />
+              </label>
+            </div>
+            <div v-if="categoryModal.form.imageUrl" class="mt-2 flex items-center gap-3">
+              <img :src="categoryModal.form.imageUrl" class="h-20 w-20 object-cover rounded-lg border border-gray-200" @error="e => e.target.style.display='none'" />
+              <button @click="categoryModal.form.imageUrl = ''" class="text-red-500 text-xs font-bold hover:underline">Xóa ảnh</button>
+            </div>
+          </div>
+        </div>
+        <div class="flex gap-3 mt-6">
+          <button @click="categoryModal.open = false" class="flex-1 border border-gray-300 rounded-lg py-2 text-sm font-bold text-gray-600 hover:bg-gray-50">Hủy</button>
+          <button @click="submitCategory" class="flex-1 bg-[#E4002B] text-white rounded-lg py-2 text-sm font-bold hover:bg-red-700">Lưu</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Branch Modal -->
     <div v-if="branchModal.open" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div class="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
@@ -419,7 +453,7 @@ const users = ref([])
 const products = ref([])
 const categories = ref([])
 const branches = ref([])
-const newCategoryName = ref('')
+const categoryImageUploading = ref(false)
 
 const tabs = [
   {
@@ -447,6 +481,10 @@ const tabs = [
 // ── Modals ──────────────────────────────────────────────
 
 const userModal = reactive({ open: false, user: null, role: '', branchId: '' })
+const categoryModal = reactive({
+  open: false, mode: 'create', categoryId: null,
+  form: { name: '', imageUrl: '' }
+})
 const productModal = reactive({
   open: false, mode: 'create', productId: null,
   form: { name: '', description: '', imageUrl: '', price: 0, isAvailable: true, categoryIds: [] }
@@ -563,17 +601,59 @@ const submitProduct = async () => {
 
 // ── Categories ────────────────────────────────────────────
 
-const createCategory = async () => {
-  const name = newCategoryName.value.trim()
+const openCategoryModal = (cat) => {
+  if (cat) {
+    categoryModal.mode = 'edit'
+    categoryModal.categoryId = cat.categoryId
+    categoryModal.form = { name: cat.name, imageUrl: cat.imageUrl || '' }
+  } else {
+    categoryModal.mode = 'create'
+    categoryModal.categoryId = null
+    categoryModal.form = { name: '', imageUrl: '' }
+  }
+  categoryModal.open = true
+}
+
+const submitCategory = async () => {
+  const name = categoryModal.form.name.trim()
   if (name.length < 2) {
     showToast('Tên danh mục phải có ít nhất 2 ký tự.', 'error'); return
   }
   try {
-    const created = await adminApi.createCategory(name)
-    categories.value.push(created)
-    newCategoryName.value = ''
+    const payload = { name, imageUrl: categoryModal.form.imageUrl || null }
+    if (categoryModal.mode === 'create') {
+      const created = await adminApi.createCategory(payload)
+      categories.value.push(created)
+    } else {
+      const updated = await adminApi.updateCategory(categoryModal.categoryId, payload)
+      const idx = categories.value.findIndex(c => c.categoryId === categoryModal.categoryId)
+      if (idx !== -1) categories.value[idx] = updated
+    }
+    categoryModal.open = false
   } catch (e) {
     alert(e.message)
+  }
+}
+
+const uploadCategoryImage = async (e) => {
+  const file = e.target.files[0]
+  if (!file) return
+  categoryImageUploading.value = true
+  try {
+    const form = new FormData()
+    form.append('file', file)
+    form.append('upload_preset', CLOUDINARY_PRESET)
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, {
+      method: 'POST',
+      body: form
+    })
+    if (!res.ok) throw new Error('Upload failed')
+    const data = await res.json()
+    categoryModal.form.imageUrl = data.secure_url
+  } catch (e) {
+    showToast('Tải ảnh thất bại.', 'error')
+  } finally {
+    categoryImageUploading.value = false
   }
 }
 

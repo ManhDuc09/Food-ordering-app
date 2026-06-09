@@ -108,6 +108,7 @@
                         <p class="text-sm font-semibold text-gray-800">{{ addr.street }}</p>
                         <p v-if="addr.city" class="text-xs text-gray-500">{{ addr.city }}</p>
                         <span v-if="addr.isDefault" class="text-xs font-bold text-red-500">Mặc định</span>
+                        <span v-if="!addr.latitude || !addr.longitude" class="text-xs text-orange-400">Chưa có toạ độ — phí tạm ước tính</span>
                       </div>
                     </label>
 
@@ -163,19 +164,27 @@
                       : 'border-gray-100 bg-white hover:border-gray-300'"
                   >
                     <span class="shrink-0 mt-0.5" :class="selectedBranch?.branchId === branch.branchId ? 'text-red-500' : 'text-gray-400'">📍</span>
-                    <div class="min-w-0">
+                    <div class="min-w-0 flex-1">
                       <p class="text-sm font-semibold text-gray-800">{{ branch.name }}</p>
                       <p class="text-xs text-gray-500 truncate">{{ branch.address }}</p>
                     </div>
-                    <svg v-if="selectedBranch?.branchId === branch.branchId"
-                      class="shrink-0 w-4 h-4 text-red-500 mt-0.5 ml-auto" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                    </svg>
+                    <div class="shrink-0 ml-2 flex items-center gap-2">
+                      <span v-if="branch._dist !== null" class="text-xs font-medium" :class="selectedBranch?.branchId === branch.branchId ? 'text-red-400' : 'text-gray-400'">
+                        {{ branch._dist < 1 ? (branch._dist * 1000).toFixed(0) + 'm' : branch._dist.toFixed(1) + 'km' }}
+                      </span>
+                      <svg v-if="selectedBranch?.branchId === branch.branchId"
+                        class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                      </svg>
+                    </div>
                   </button>
                   <p v-if="filteredBranches.length === 0" class="text-center text-sm text-gray-400 py-4">
                     Không tìm thấy chi nhánh
                   </p>
                 </div>
+                <p v-if="userLocation" class="text-xs text-gray-400 mt-2 text-center">
+                  Chỉ hiển thị chi nhánh trong bán kính 10km
+                </p>
               </div>
 
               <div class="rounded-3xl border border-gray-200 bg-gray-50 p-5">
@@ -183,9 +192,9 @@
                 <div class="space-y-3">
                   <label
                     class="flex items-center gap-3 cursor-pointer rounded-2xl border-2 px-4 py-3 transition-colors"
-                    :class="form.paymentMethod === 'COD' ? 'border-red-500 bg-red-50' : 'border-transparent bg-white'"
+                    :class="form.paymentMethod === PaymentMethod.COD ? 'border-red-500 bg-red-50' : 'border-transparent bg-white'"
                   >
-                    <input type="radio" value="COD" v-model="form.paymentMethod" class="h-4 w-4 accent-red-600" />
+                    <input type="radio" :value="PaymentMethod.COD" v-model="form.paymentMethod" class="h-4 w-4 accent-red-600" />
                     <span class="text-2xl">🛵</span>
                     <div>
                       <p class="font-semibold text-sm">Thanh toán khi nhận hàng</p>
@@ -194,9 +203,9 @@
                   </label>
                   <label
                     class="flex items-center gap-3 cursor-pointer rounded-2xl border-2 px-4 py-3 transition-colors"
-                    :class="form.paymentMethod === 'MOMO' ? 'border-pink-500 bg-pink-50' : 'border-transparent bg-white'"
+                    :class="form.paymentMethod === PaymentMethod.MOMO ? 'border-pink-500 bg-pink-50' : 'border-transparent bg-white'"
                   >
-                    <input type="radio" value="MOMO" v-model="form.paymentMethod" class="h-4 w-4 accent-pink-600" />
+                    <input type="radio" :value="PaymentMethod.MOMO" v-model="form.paymentMethod" class="h-4 w-4 accent-pink-600" />
                     <span class="text-2xl">💜</span>
                     <div>
                       <p class="font-semibold text-sm">MoMo</p>
@@ -205,9 +214,9 @@
                   </label>
                   <label
                     class="flex items-center gap-3 cursor-pointer rounded-2xl border-2 px-4 py-3 transition-colors"
-                    :class="form.paymentMethod === 'VNPAY' ? 'border-blue-500 bg-blue-50' : 'border-transparent bg-white'"
+                    :class="form.paymentMethod === PaymentMethod.VNPAY ? 'border-blue-500 bg-blue-50' : 'border-transparent bg-white'"
                   >
-                    <input type="radio" value="VNPAY" v-model="form.paymentMethod" class="h-4 w-4 accent-blue-600" />
+                    <input type="radio" :value="PaymentMethod.VNPAY" v-model="form.paymentMethod" class="h-4 w-4 accent-blue-600" />
                     <span class="text-2xl">🏦</span>
                     <div>
                       <p class="font-semibold text-sm">VNPay</p>
@@ -217,7 +226,7 @@
                 </div>
               </div>
 
-              <div v-if="form.paymentMethod === 'MOMO'" class="rounded-3xl border border-dashed border-yellow-400 bg-yellow-50 px-5 py-4 text-sm text-yellow-700">
+              <div v-if="form.paymentMethod === PaymentMethod.MOMO" class="rounded-3xl border border-dashed border-yellow-400 bg-yellow-50 px-5 py-4 text-sm text-yellow-700">
                 Cổng thanh toán <strong>MoMo</strong> đang được tích hợp. Đơn hàng sẽ được đặt và thanh toán xác nhận sau.
               </div>
 
@@ -232,13 +241,15 @@
                 </div>
 
                 <!-- Shipping -->
-                <div class="flex justify-between text-sm" :class="shippingFee === -1 ? 'text-red-500' : 'text-gray-600'">
+                <div class="flex justify-between text-sm"
+                  :class="shippingFee === -1 || shippingFee === -2 ? 'text-red-500' : 'text-gray-600'">
                   <span class="flex items-center gap-1">
                     Phí giao hàng
                     <span v-if="deliveryDistance !== null" class="text-xs text-gray-400">(~{{ deliveryDistance.toFixed(1) }}km)</span>
                   </span>
                   <span v-if="calculatingShipping" class="text-xs text-gray-400 animate-pulse">Đang tính...</span>
                   <span v-else-if="shippingFee === -1" class="font-semibold">Ngoài phạm vi</span>
+                  <span v-else-if="shippingFee === -2" class="font-semibold text-xs">Không xác định được địa chỉ</span>
                   <span v-else-if="!selectedBranch || !form.address" class="text-xs text-gray-400">Chọn địa chỉ & chi nhánh</span>
                   <span v-else>{{ formatPrice(shippingFee) }}</span>
                 </div>
@@ -273,12 +284,13 @@ import { orderApi } from '@/api/order.js'
 import { branchApi } from '@/api/branch.js'
 import { profileApi } from '@/api/profile.js'
 import { showToast } from '@/store/toast.js'
+import { PaymentMethod } from '@/constants/enums.js'
 
 const form = ref({
   fullName: '',
   phone: '',
   address: '',
-  paymentMethod: 'COD',
+  paymentMethod: PaymentMethod.COD,
   branchId: ''
 })
 
@@ -300,11 +312,29 @@ const selectedBranch = ref(null)
 const allBranches = ref([])
 const branchSearch = ref('')
 const mapInstance = ref(null)
+const userLocation = ref(null)
+
+const branchesWithDistance = computed(() => {
+  return allBranches.value
+    .map(b => ({
+      ...b,
+      _dist: (userLocation.value && b.latitude && b.longitude)
+        ? haversine(userLocation.value.lat, userLocation.value.lng, Number(b.latitude), Number(b.longitude))
+        : null
+    }))
+    .sort((a, b) => {
+      if (a._dist === null && b._dist === null) return 0
+      if (a._dist === null) return 1
+      if (b._dist === null) return -1
+      return a._dist - b._dist
+    })
+})
 
 const filteredBranches = computed(() => {
   const q = branchSearch.value.trim().toLowerCase()
-  if (!q) return allBranches.value
-  return allBranches.value.filter(b =>
+  const list = branchesWithDistance.value
+  if (!q) return list
+  return list.filter(b =>
     b.name?.toLowerCase().includes(q) || b.address?.toLowerCase().includes(q)
   )
 })
@@ -338,6 +368,12 @@ onMounted(async () => {
   } catch (e) {
     console.error(e)
   }
+
+  // Get user location for distance sorting
+  navigator.geolocation?.getCurrentPosition(
+    pos => { userLocation.value = { lat: pos.coords.latitude, lng: pos.coords.longitude } },
+    () => {}
+  )
 
   await nextTick()
   if (!branchMapEl.value) return
@@ -393,13 +429,17 @@ function haversine(lat1, lng1, lat2, lng2) {
 }
 
 async function geocodeAddress(address) {
-  const res = await fetch(
-    `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address + ', Việt Nam')}&format=json&limit=1`,
-    { headers: { 'Accept-Language': 'vi' } }
-  )
-  const data = await res.json()
-  if (!data.length) return null
-  return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) }
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1&countrycodes=vn`,
+      { headers: { 'Accept-Language': 'vi' } }
+    )
+    const data = await res.json()
+    if (!Array.isArray(data) || !data.length) return null
+    return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) }
+  } catch {
+    return null
+  }
 }
 
 let shippingTimer = null
@@ -411,17 +451,29 @@ async function calculateShipping() {
   }
   calculatingShipping.value = true
   try {
-   
     const savedAddr = savedAddresses.value.find(a => a.id === selectedAddressId.value)
-    const coords = (savedAddr?.latitude && savedAddr?.longitude)
-      ? { lat: savedAddr.latitude, lng: savedAddr.longitude }
-      : await geocodeAddress(form.value.address)
-    if (!coords) { shippingFee.value = 15000; deliveryDistance.value = null; return }
+    let coords = null
+    if (savedAddr?.latitude != null && savedAddr?.longitude != null) {
+      coords = { lat: Number(savedAddr.latitude), lng: Number(savedAddr.longitude) }
+    }
+    if (!coords || isNaN(coords.lat) || isNaN(coords.lng)) {
+      coords = await geocodeAddress(form.value.address)
+    }
+    // Last resort: use current GPS position as a proxy for the delivery address
+    if (!coords && userLocation.value) {
+      coords = { lat: userLocation.value.lat, lng: userLocation.value.lng }
+    }
+    if (!coords) {
+      shippingFee.value = -2
+      deliveryDistance.value = null
+      return
+    }
 
     const dist = haversine(
       Number(selectedBranch.value.latitude), Number(selectedBranch.value.longitude),
       coords.lat, coords.lng
     )
+    if (isNaN(dist)) { shippingFee.value = -2; deliveryDistance.value = null; return }
     deliveryDistance.value = dist
 
     if (dist > 15) {
@@ -429,8 +481,9 @@ async function calculateShipping() {
     } else {
       shippingFee.value = (SHIPPING_TIERS.find(t => dist <= t.maxKm) ?? SHIPPING_TIERS.at(-1)).fee
     }
-  } catch {
-    shippingFee.value = 15000
+  } catch (e) {
+    console.error('calculateShipping error:', e)
+    shippingFee.value = -2
   } finally {
     calculatingShipping.value = false
   }
@@ -505,12 +558,13 @@ const submitPayment = async () => {
       phone: form.value.phone,
       address: form.value.address,
       branchId: form.value.branchId,
+      shippingFee: shippingFee.value > 0 ? shippingFee.value : 0,
       totalAmount: totalWithShipping.value
     }
 
     const result = await orderApi.createOrder(orderPayload)
 
-    if (form.value.paymentMethod === 'VNPAY') {
+    if (form.value.paymentMethod === PaymentMethod.VNPAY) {
       const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/payment/vnpay/create`, {
         method: 'POST',
         credentials: 'include',
