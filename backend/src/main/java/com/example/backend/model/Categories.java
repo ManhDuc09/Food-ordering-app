@@ -35,7 +35,7 @@ public class Categories {
     private String imageUrl;
 
     @ManyToMany(mappedBy = "categories")
-    @JsonIgnoreProperties("categories") 
+    @JsonIgnoreProperties("categories")
     private Set<Product> products;
-    
+
 }

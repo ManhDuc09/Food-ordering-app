@@ -88,12 +88,18 @@ public class AdminService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
-        if (request.getName() != null) product.setName(request.getName());
-        if (request.getDescription() != null) product.setDescription(request.getDescription());
-        if (request.getImageUrl() != null) product.setImageUrl(request.getImageUrl());
-        if (request.getIsAvailable() != null) product.setIsAvailable(request.getIsAvailable());
-        if (request.getPrice() != null) product.setPrice(request.getPrice());
-        if (request.getCategoryIds() != null) product.setCategories(resolveCategories(request.getCategoryIds()));
+        if (request.getName() != null)
+            product.setName(request.getName());
+        if (request.getDescription() != null)
+            product.setDescription(request.getDescription());
+        if (request.getImageUrl() != null)
+            product.setImageUrl(request.getImageUrl());
+        if (request.getIsAvailable() != null)
+            product.setIsAvailable(request.getIsAvailable());
+        if (request.getPrice() != null)
+            product.setPrice(request.getPrice());
+        if (request.getCategoryIds() != null)
+            product.setCategories(resolveCategories(request.getCategoryIds()));
 
         return productMapper.productToResponse(productRepository.save(product));
     }
@@ -128,8 +134,10 @@ public class AdminService {
         Categories category = categoriesRepository.findById(categoryId)
                 .orElseThrow(() -> new RuntimeException("Category not found"));
 
-        if (request.getName() != null) category.setName(request.getName());
-        if (request.getImageUrl() != null) category.setImageUrl(request.getImageUrl());
+        if (request.getName() != null)
+            category.setName(request.getName());
+        if (request.getImageUrl() != null)
+            category.setImageUrl(request.getImageUrl());
 
         return categoriesMapper.categoriesToResponse(categoriesRepository.save(category));
     }
@@ -158,11 +166,16 @@ public class AdminService {
         Branch branch = branchRepository.findById(branchId)
                 .orElseThrow(() -> new RuntimeException("Branch not found"));
 
-        if (request.getName() != null) branch.setName(request.getName());
-        if (request.getAddress() != null) branch.setAddress(request.getAddress());
-        if (request.getLatitude() != null) branch.setLatitude(BigDecimal.valueOf(request.getLatitude()));
-        if (request.getLongitude() != null) branch.setLongitude(BigDecimal.valueOf(request.getLongitude()));
-        if (request.getIsOpen() != null) branch.setIsOpen(request.getIsOpen());
+        if (request.getName() != null)
+            branch.setName(request.getName());
+        if (request.getAddress() != null)
+            branch.setAddress(request.getAddress());
+        if (request.getLatitude() != null)
+            branch.setLatitude(BigDecimal.valueOf(request.getLatitude()));
+        if (request.getLongitude() != null)
+            branch.setLongitude(BigDecimal.valueOf(request.getLongitude()));
+        if (request.getIsOpen() != null)
+            branch.setIsOpen(request.getIsOpen());
 
         return branchMapper.branchToResponse(branchRepository.save(branch));
     }
@@ -181,7 +194,8 @@ public class AdminService {
     // --- Helpers ---
 
     private Set<Categories> resolveCategories(Set<UUID> categoryIds) {
-        if (categoryIds == null || categoryIds.isEmpty()) return new HashSet<>();
+        if (categoryIds == null || categoryIds.isEmpty())
+            return new HashSet<>();
         return categoryIds.stream()
                 .map(id -> categoriesRepository.findById(id)
                         .orElseThrow(() -> new RuntimeException("Category not found: " + id)))
