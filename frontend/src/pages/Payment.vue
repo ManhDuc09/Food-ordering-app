@@ -163,7 +163,12 @@
                       ? 'border-red-500 bg-red-50'
                       : 'border-gray-100 bg-white hover:border-gray-300'"
                   >
-                    <span class="shrink-0 mt-0.5" :class="selectedBranch?.branchId === branch.branchId ? 'text-red-500' : 'text-gray-400'">📍</span>
+                    <span class="shrink-0 w-9 h-9 rounded-lg bg-red-50 flex items-center justify-center">
+                      <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                      </svg>
+                    </span>
                     <div class="min-w-0 flex-1">
                       <p class="text-sm font-semibold text-gray-800">{{ branch.name }}</p>
                       <p class="text-xs text-gray-500 truncate">{{ branch.address }}</p>
@@ -195,7 +200,14 @@
                     :class="form.paymentMethod === PaymentMethod.COD ? 'border-red-500 bg-red-50' : 'border-transparent bg-white'"
                   >
                     <input type="radio" :value="PaymentMethod.COD" v-model="form.paymentMethod" class="h-4 w-4 accent-red-600" />
-                    <span class="text-2xl">🛵</span>
+                    <!-- Cash icon -->
+                    <span class="shrink-0 w-9 h-9 rounded-xl bg-green-100 flex items-center justify-center">
+                      <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <rect x="2" y="6" width="20" height="12" rx="2" stroke-width="1.8"/>
+                        <circle cx="12" cy="12" r="3" stroke-width="1.8"/>
+                        <path stroke-width="1.8" stroke-linecap="round" d="M6 10v4M18 10v4"/>
+                      </svg>
+                    </span>
                     <div>
                       <p class="font-semibold text-sm">Thanh toán khi nhận hàng</p>
                       <p class="text-xs text-gray-400">Trả tiền mặt khi giao hàng</p>
@@ -206,7 +218,10 @@
                     :class="form.paymentMethod === PaymentMethod.MOMO ? 'border-pink-500 bg-pink-50' : 'border-transparent bg-white'"
                   >
                     <input type="radio" :value="PaymentMethod.MOMO" v-model="form.paymentMethod" class="h-4 w-4 accent-pink-600" />
-                    <span class="text-2xl">💜</span>
+                    <!-- MoMo logo -->
+                    <span class="shrink-0 w-9 h-9 rounded-xl overflow-hidden">
+                      <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRAvqtnrX-jan83zUzhldZsePVib6MTkkhXOQ&s" alt="MoMo" class="w-full h-full object-cover" />
+                    </span>
                     <div>
                       <p class="font-semibold text-sm">MoMo</p>
                       <p class="text-xs text-gray-400">Ví điện tử MoMo</p>
@@ -217,7 +232,10 @@
                     :class="form.paymentMethod === PaymentMethod.VNPAY ? 'border-blue-500 bg-blue-50' : 'border-transparent bg-white'"
                   >
                     <input type="radio" :value="PaymentMethod.VNPAY" v-model="form.paymentMethod" class="h-4 w-4 accent-blue-600" />
-                    <span class="text-2xl">🏦</span>
+                    
+                    <span class="shrink-0 w-9 h-9 rounded-xl overflow-hidden">
+                      <img src="https://yt3.googleusercontent.com/JM1m2wng0JQUgSg9ZSEvz7G4Rwo7pYb4QBYip4PAhvGRyf1D_YTbL2DdDjOy0qOXssJPdz2r7Q=s900-c-k-c0x00ffffff-no-rj" alt="VNPay" class="w-full h-full object-contain bg-white p-0.5" />
+                    </span>
                     <div>
                       <p class="font-semibold text-sm">VNPay</p>
                       <p class="text-xs text-gray-400">Thanh toán qua VNPay</p>
@@ -298,12 +316,20 @@ const savedAddresses = ref([])
 const selectedAddressId = ref(null)
 const fieldErrors = ref({ fullName: '', phone: '', address: '' })
 
-watch(selectedAddressId, (id) => {
+watch(selectedAddressId, async (id) => {
   if (id && id !== 'custom') {
     const addr = savedAddresses.value.find(a => a.id === id)
-    if (addr) form.value.address = `${addr.street}${addr.city ? ', ' + addr.city : ''}`
+    if (addr) {
+      form.value.address = `${addr.street}${addr.city ? ', ' + addr.city : ''}`
+      if (addr.latitude != null && addr.longitude != null && !isNaN(Number(addr.latitude))) {
+        addressCoords.value = { lat: Number(addr.latitude), lng: Number(addr.longitude) }
+      } else {
+        addressCoords.value = await geocodeAddress(form.value.address)
+      }
+    }
   } else if (id === 'custom') {
     form.value.address = ''
+    addressCoords.value = null
   }
 })
 
@@ -313,13 +339,16 @@ const allBranches = ref([])
 const branchSearch = ref('')
 const mapInstance = ref(null)
 const userLocation = ref(null)
+const addressCoords = ref(null)
+const branchMarkers = new Map()
 
 const branchesWithDistance = computed(() => {
+  const loc = addressCoords.value ?? userLocation.value
   return allBranches.value
     .map(b => ({
       ...b,
-      _dist: (userLocation.value && b.latitude && b.longitude)
-        ? haversine(userLocation.value.lat, userLocation.value.lng, Number(b.latitude), Number(b.longitude))
+      _dist: (loc && b.latitude && b.longitude)
+        ? haversine(loc.lat, loc.lng, Number(b.latitude), Number(b.longitude))
         : null
     }))
     .sort((a, b) => {
@@ -332,11 +361,13 @@ const branchesWithDistance = computed(() => {
 
 const filteredBranches = computed(() => {
   const q = branchSearch.value.trim().toLowerCase()
-  const list = branchesWithDistance.value
-  if (!q) return list
-  return list.filter(b =>
-    b.name?.toLowerCase().includes(q) || b.address?.toLowerCase().includes(q)
-  )
+  const loc = addressCoords.value ?? userLocation.value
+  return branchesWithDistance.value.filter(b => {
+    if (!b.isOpen) return false
+    if (loc && b._dist !== null && b._dist > 10) return false
+    if (q) return b.name?.toLowerCase().includes(q) || b.address?.toLowerCase().includes(q)
+    return true
+  })
 })
 
 const selectBranch = (branch) => {
@@ -346,6 +377,18 @@ const selectBranch = (branch) => {
     mapInstance.value.setView([branch.latitude, branch.longitude], 15)
   }
 }
+
+watch(filteredBranches, (filtered) => {
+  if (!mapInstance.value) return
+  const visibleIds = new Set(filtered.map(b => b.branchId))
+  branchMarkers.forEach((marker, branchId) => {
+    if (visibleIds.has(branchId)) {
+      if (!mapInstance.value.hasLayer(marker)) marker.addTo(mapInstance.value)
+    } else {
+      if (mapInstance.value.hasLayer(marker)) mapInstance.value.removeLayer(marker)
+    }
+  })
+})
 
 onMounted(async () => {
   // Load profile for autofill
@@ -390,6 +433,7 @@ onMounted(async () => {
       .addTo(map)
       .bindPopup(`<b>${branch.name}</b><br><small>${branch.address || ''}</small>`)
     marker.on('click', () => selectBranch(branch))
+    branchMarkers.set(branch.branchId, marker)
   })
 })
 

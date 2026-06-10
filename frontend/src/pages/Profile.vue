@@ -167,7 +167,7 @@
               <p class="text-xs text-gray-400 font-mono">{{ order.orderId.slice(0, 8).toUpperCase() }}</p>
             </div>
             <div class="flex items-center gap-2 flex-wrap justify-end">
-              <span v-if="order.paymentStatus === PaymentStatus.PENDING"
+              <span v-if="order.paymentStatus === PaymentStatus.PENDING && !(order.status === OrderStatus.DELIVERED && order.paymentMethod === PaymentMethod.COD)"
                 class="text-xs font-semibold px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700">
                 Chưa thanh toán
               </span>
@@ -177,8 +177,9 @@
               </span>
               <span class="text-xs font-semibold px-2 py-0.5 rounded-full"
                 :class="{
-                  'bg-gray-100 text-gray-600': order.status === OrderStatus.PENDING,
-                  'bg-blue-100 text-blue-600': order.status === OrderStatus.CONFIRMED,
+                  'bg-yellow-100 text-yellow-700': order.status === OrderStatus.PENDING,
+                  'bg-blue-100 text-blue-600': order.status === OrderStatus.PREPARING,
+                  'bg-orange-100 text-orange-600': order.status === OrderStatus.DELIVERING,
                   'bg-green-100 text-green-700': order.status === OrderStatus.DELIVERED,
                   'bg-red-100 text-red-600': order.status === OrderStatus.CANCELLED,
                 }">
@@ -393,7 +394,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { profileApi } from '../api/profile'
 import { showToast } from '../store/toast'
 import { OrderStatus, PaymentStatus, PaymentMethod } from '../constants/enums'
@@ -496,7 +497,29 @@ async function loadMore() {
 }
 
 import { watch } from 'vue'
-watch(activeTab, val => { if (val === 'orders') onOrdersTabOpen() })
+
+let ordersTimer = null
+
+const silentRefreshOrders = async () => {
+  try {
+    const data = await profileApi.getMyOrders(0)
+    orders.value = data.orders
+    hasMore.value = data.hasMore
+    currentPage.value = 0
+  } catch {}
+}
+
+watch(activeTab, val => {
+  if (val === 'orders') {
+    onOrdersTabOpen()
+    ordersTimer = setInterval(silentRefreshOrders, 5000)
+  } else {
+    clearInterval(ordersTimer)
+    ordersTimer = null
+  }
+})
+
+onUnmounted(() => clearInterval(ordersTimer))
 
 // Forward geocode when address fields are typed manually
 let fieldGeoTimer = null
@@ -897,9 +920,10 @@ const paymentMethodLabel = m => ({
 }[m] || m)
 
 const orderStatusLabel = s => ({
-  [OrderStatus.PENDING]:   'Đang xử lý',
-  [OrderStatus.CONFIRMED]: 'Đã xác nhận',
-  [OrderStatus.DELIVERED]: 'Đã giao',
-  [OrderStatus.CANCELLED]: 'Đã hủy',
+  [OrderStatus.PENDING]:    'Chờ xử lý',
+  [OrderStatus.PREPARING]:  'Đang chuẩn bị',
+  [OrderStatus.DELIVERING]: 'Đang giao',
+  [OrderStatus.DELIVERED]:  'Đã giao',
+  [OrderStatus.CANCELLED]:  'Đã hủy',
 }[s] || s)
 </script>

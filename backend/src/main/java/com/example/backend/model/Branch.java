@@ -33,5 +33,6 @@ public class Branch {
 
     @Column(name = "longitude")
     private java.math.BigDecimal longitude;
+
     public Branch() {}
 }

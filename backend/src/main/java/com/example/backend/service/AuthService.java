@@ -43,6 +43,16 @@ public class AuthService {
 
     public AuthResponse register(AuthRequest request) {
         log.info("Registering new user: {}", request.getEmail());
+
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new RuntimeException("Email này đã được sử dụng.");
+        }
+
+        if (request.getPhoneNumber() != null && !request.getPhoneNumber().isBlank()
+                && userRepository.findByPhoneNumber(request.getPhoneNumber()).isPresent()) {
+            throw new RuntimeException("Số điện thoại này đã được sử dụng.");
+        }
+
         User user = new User();
         user.setEmail(request.getEmail());
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));

@@ -225,7 +225,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { managerApi } from '../api/manager'
 import { logout } from '../store/auth'
@@ -337,5 +337,18 @@ const formatDate = (dateStr) => {
   return new Date(dateStr).toLocaleString('vi-VN')
 }
 
-onMounted(loadOrders)
+let pollTimer = null
+
+const silentRefresh = async () => {
+  try {
+    orders.value = await managerApi.getOrders()
+  } catch {}
+}
+
+onMounted(() => {
+  loadOrders()
+  pollTimer = setInterval(silentRefresh, 5000)
+})
+
+onUnmounted(() => clearInterval(pollTimer))
 </script>

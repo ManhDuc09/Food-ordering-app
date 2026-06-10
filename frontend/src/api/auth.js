@@ -19,7 +19,10 @@ export const authApi = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     })
-    if (!response.ok) throw new Error('Đăng ký thất bại!')
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}))
+      throw new Error(body.error || 'Đăng ký thất bại!')
+    }
     return response.json()
   }
 }

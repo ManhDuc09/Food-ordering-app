@@ -8,7 +8,7 @@
             <img src="https://upload.wikimedia.org/wikipedia/sco/b/bf/KFC_logo.svg" alt="KFC" class="w-10 h-10 object-contain" />
           </div>
           <div>
-            <p class="text-white font-black text-lg leading-none">KFC</p>
+            <router-link to="/"><p class="text-white font-black text-lg leading-none">KFC</p></router-link>
             <p class="text-red-200 text-xs">Cổng Quản Trị</p>
           </div>
         </div>
